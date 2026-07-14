@@ -102,68 +102,100 @@ public class Worker : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var pathLoader = scope.ServiceProvider.GetRequiredService<IPathConfigLoader>();
         var transferService = scope.ServiceProvider.GetRequiredService<IFileTransferService>();
+        var purgeService = scope.ServiceProvider.GetRequiredService<IFilePurgeService>();
         var logRepository = scope.ServiceProvider.GetRequiredService<ILogRepository>();
 
-        IReadOnlyList<Models.TransferChain> chains;
+        var chains = await CarregarChainsAsync(pathLoader, settings, logRepository, stoppingToken);
+        if (chains is null)
+            return;
+
+        var dtInicio = DateTime.UtcNow;
+        var totals = await ProcessarChainsAsync(chains, transferService, purgeService, settings, stoppingToken);
+
+        await RegistrarResultadoAsync(logRepository, settings, dtInicio, totals, stoppingToken);
+        ReportarResultado(totals);
+    }
+
+    private async Task<IReadOnlyList<Models.TransferChain>?> CarregarChainsAsync(
+        IPathConfigLoader pathLoader,
+        StaSettings settings,
+        ILogRepository logRepository,
+        CancellationToken stoppingToken)
+    {
         try
         {
-            chains = pathLoader.CarregarCaminhos(settings.ArquivoPathsXml);
+            return pathLoader.CarregarCaminhos(settings.ArquivoPathsXml);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Falha ao carregar paths.xml de '{Path}'.", settings.ArquivoPathsXml);
             await logRepository.InserirLogAsync(
                 _aliasSistema, settings.CnProcesso, DateTime.UtcNow, "E", 0, 0, 0, 0,
-                $"<Etapa>Leitura XML</Etapa><Observacao>{ex.Message}</Observacao>", stoppingToken);
-            return;
+                BuildLogObservacao("Leitura XML", ex.Message), stoppingToken);
+            return null;
         }
+    }
 
-        var dtInicio = DateTime.UtcNow;
-        int totalProcessed = 0, totalSucceeded = 0, totalFailed = 0;
+    private async Task<CicloTotals> ProcessarChainsAsync(
+        IReadOnlyList<Models.TransferChain> chains,
+        IFileTransferService transferService,
+        IFilePurgeService purgeService,
+        StaSettings settings,
+        CancellationToken stoppingToken)
+    {
+        var totals = new CicloTotals();
 
         foreach (var chain in chains)
         {
             for (int i = 0; i < chain.Nodes.Count - 1; i++)
             {
-                var sourceNode = chain.Nodes[i];
-                var destNode = chain.Nodes[i + 1];
-
                 var result = await transferService.TransferAsync(
-                    sourceNode,
-                    sourceNode.DiretorioPrincipal,
-                    destNode.DiretorioPrincipal,
+                    chain.Nodes[i],
+                    chain.Nodes[i].DiretorioPrincipal,
+                    chain.Nodes[i + 1].DiretorioPrincipal,
                     settings.SobreEscreverArquivos,
                     settings.TimeoutCompactacaoMs,
                     stoppingToken);
 
-                totalProcessed += result.FilesProcessed;
-                totalSucceeded += result.FilesSucceeded;
-                totalFailed += result.FilesFailed;
+                totals.Add(result);
             }
 
-            // Última linha da cadeia: apenas exclusão de arquivos antigos (legado ExcluiArquivos)
             if (chain.Nodes.Count > 0)
-            {
-                var lastNode = chain.Nodes[^1];
-                var maskMatcher = scope.ServiceProvider.GetRequiredService<IFileMaskMatcher>();
-                ExcluirArquivosAntigos(lastNode, maskMatcher);
-            }
+                purgeService.PurgeNode(chain.Nodes[^1]);
         }
 
-        var status = totalFailed > 0 ? "W" : "O";
-        var obs = $"<Etapa>Transferencia de arquivos</Etapa><Observacao>Processados: {totalProcessed}, Sucesso: {totalSucceeded}, Falhas: {totalFailed}</Observacao>";
+        return totals;
+    }
 
-        if (settings.GeraLogSucessoBancoDados || totalFailed > 0)
-        {
-            await logRepository.InserirLogAsync(
-                _aliasSistema, settings.CnProcesso, dtInicio, status,
-                totalSucceeded, 0, totalFailed, 0, obs, stoppingToken);
-        }
+    private async Task RegistrarResultadoAsync(
+        ILogRepository logRepository,
+        StaSettings settings,
+        DateTime dtInicio,
+        CicloTotals totals,
+        CancellationToken stoppingToken)
+    {
+        if (!settings.GeraLogSucessoBancoDados && totals.FilesFailed == 0)
+            return;
 
-        if (totalFailed > 0)
-            _logger.LogWarning("Ciclo com falhas: {Processed} processados, {Succeeded} OK, {Failed} erros.", totalProcessed, totalSucceeded, totalFailed);
-        else if (totalProcessed > 0)
-            _logger.LogInformation("Ciclo concluído: {Processed} arquivos transferidos com sucesso.", totalSucceeded);
+        var status = totals.FilesFailed > 0 ? "W" : "O";
+        var obs = BuildLogObservacao(
+            "Transferencia de arquivos",
+            $"Processados: {totals.FilesProcessed}, Sucesso: {totals.FilesSucceeded}, Falhas: {totals.FilesFailed}");
+
+        await logRepository.InserirLogAsync(
+            _aliasSistema, settings.CnProcesso, dtInicio, status,
+            totals.FilesSucceeded, 0, totals.FilesFailed, 0, obs, stoppingToken);
+    }
+
+    private void ReportarResultado(CicloTotals totals)
+    {
+        if (totals.FilesFailed > 0)
+            _logger.LogWarning(
+                "Ciclo com falhas: {Processed} processados, {Succeeded} OK, {Failed} erros.",
+                totals.FilesProcessed, totals.FilesSucceeded, totals.FilesFailed);
+        else if (totals.FilesProcessed > 0)
+            _logger.LogInformation(
+                "Ciclo concluído: {Processed} arquivos transferidos com sucesso.", totals.FilesSucceeded);
     }
 
     private async Task ExecutarLimpezaLogsAsync(CancellationToken stoppingToken)
@@ -179,45 +211,24 @@ public class Worker : BackgroundService
             _aliasSistema, settings.CnProcesso, settings.QtdDiasExcluirLog, stoppingToken);
     }
 
-    private void ExcluirArquivosAntigos(Models.TransferPath node, IFileMaskMatcher maskMatcher)
+    private static string BuildLogObservacao(string etapa, string mensagem)
     {
-        if (node.DiasExcluir <= 0)
-            return;
-
-        var cutoff = DateTime.Now.AddDays(-node.DiasExcluir);
-
-        PurgeDirectory(node.DiretorioPrincipal, cutoff, node.MascaraArq, maskMatcher);
-
-        if (!string.IsNullOrWhiteSpace(node.DiretorioBackup))
-            PurgeDirectory(node.DiretorioBackup, cutoff, node.MascaraArq, maskMatcher);
+        var etapaEl = new System.Xml.Linq.XElement("Etapa", etapa);
+        var obsEl = new System.Xml.Linq.XElement("Observacao", mensagem);
+        return etapaEl + obsEl.ToString();
     }
 
-    private void PurgeDirectory(string directory, DateTime cutoff, string mask, IFileMaskMatcher maskMatcher)
+    private sealed class CicloTotals
     {
-        if (!Directory.Exists(directory))
-            return;
+        public int FilesProcessed { get; private set; }
+        public int FilesSucceeded { get; private set; }
+        public int FilesFailed { get; private set; }
 
-        try
+        public void Add(FileTransferResult result)
         {
-            foreach (var file in new DirectoryInfo(directory).GetFiles())
-            {
-                if (file.LastWriteTime < cutoff
-                    && (string.IsNullOrWhiteSpace(mask) || maskMatcher.Match(file.Name, mask)))
-                {
-                    try
-                    {
-                        file.Delete();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Falha ao excluir '{File}'.", file.FullName);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Falha ao purgar diretório '{Dir}'.", directory);
+            FilesProcessed += result.FilesProcessed;
+            FilesSucceeded += result.FilesSucceeded;
+            FilesFailed += result.FilesFailed;
         }
     }
 

@@ -49,6 +49,7 @@ var builder = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IFileMaskMatcher, FileMaskMatcher>();
         services.AddSingleton<IFileSizeValidator, FileSizeValidator>();
         services.AddSingleton<IFileLockChecker, FileLockChecker>();
+        services.AddSingleton<IFilePurgeService, FilePurgeService>();
         services.AddSingleton<IPathConfigLoader, PathConfigLoader>();
         services.AddScoped<IFileRetentionService, FileRetentionService>();
         services.AddScoped<IFileTransferService, FileTransferService>();

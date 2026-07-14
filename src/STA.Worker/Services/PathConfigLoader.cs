@@ -43,6 +43,14 @@ public class PathConfigLoader : IPathConfigLoader
             foreach (var element in group)
             {
                 var node = ParseNode(element);
+
+                if (string.IsNullOrWhiteSpace(node.DiretorioPrincipal))
+                {
+                    _logger.LogWarning(
+                        "Nó ignorado em '{Group}': tag DiretorioPrincipal é obrigatória.", group.Key);
+                    continue;
+                }
+
                 nodes.Add(node);
 
                 if (etapa is null && !string.IsNullOrWhiteSpace(node.Etapa))

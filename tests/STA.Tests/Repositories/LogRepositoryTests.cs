@@ -11,11 +11,10 @@ namespace STA.Tests.Repositories;
 public class LogRepositoryTests
 {
     [Fact]
-    public async Task ExcluirLogsAntigosAsync_ComLogsExpirados_ExcluilosComSucesso()
+    public async Task QueryExcluirLogs_FiltraCorretamentePorData()
     {
-        // Nota: EF Core In-Memory não suporta ExecuteDeleteAsync.
-        // Este teste valida a lógica de query; testes de integração com PostgreSQL
-        // validarão o DELETE em produção.
+        // Valida que a query LINQ identifica corretamente os logs expirados.
+        // ExecuteDeleteAsync requer PostgreSQL real — testado em integração.
         var options = new DbContextOptionsBuilder<StaDbContext>()
             .UseInMemoryDatabase(databaseName: "log_repo_delete_test")
             .Options;
@@ -88,8 +87,11 @@ public class LogRepositoryTests
     }
 
     [Fact]
-    public async Task ExcluirLogsAntigosAsync_NenhumLogExpirado_RetornaZero()
+    public async Task ExcluirLogsAntigosAsync_ExecuteDeleteAsync_NaoSuportadoEmInMemory_LancaException()
     {
+        // ExecuteDeleteAsync não funciona com EF In-Memory.
+        // Este teste documenta que a exception é propagada (não engolida).
+        // Testes reais de DELETE devem usar PostgreSQL.
         var options = new DbContextOptionsBuilder<StaDbContext>()
             .UseInMemoryDatabase(databaseName: "log_repo_no_expire_test")
             .Options;
@@ -101,26 +103,11 @@ public class LogRepositoryTests
         context.Sistemas.Add(sistema);
         context.SaveChanges();
 
-        var logRecente = new LogProcesso
-        {
-            CnSistema = sistema.CnSistema,
-            CnProcesso = 1,
-            DtInicio = DateTime.UtcNow.AddDays(-2),
-            DtFimProcesso = DateTime.UtcNow.AddDays(-2).AddHours(1),
-            IdStatusProcesso = "O",
-            Sistema = sistema
-        };
-
-        context.Logs.Add(logRecente);
-        context.SaveChanges();
-
         var mockLogger = new Mock<ILogger<LogRepository>>();
         var repository = new LogRepository(context, mockLogger.Object);
 
-        // Manter 5 dias — log recente não será excluído
-        var excluidos = await repository.ExcluirLogsAntigosAsync("STA", 1, diasManter: 5);
-
-        Assert.Equal(0, excluidos);
-        Assert.Single(context.Logs); // Log permanece
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            repository.ExcluirLogsAntigosAsync("STA", 1, diasManter: 5));
     }
 }
+

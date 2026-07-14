@@ -48,6 +48,12 @@ public class FileCompressor : IFileCompressor
         int timeoutMs,
         CancellationToken cancellationToken)
     {
+        if (!IsCompressionTypeSupported(compressionType))
+        {
+            _logger.LogWarning("Tipo de compressão não suportado: '{Type}'.", compressionType);
+            return false;
+        }
+
         if (!File.Exists(_sevenZipPath))
         {
             _logger.LogWarning("7-Zip não encontrado em '{Path}'.", _sevenZipPath);

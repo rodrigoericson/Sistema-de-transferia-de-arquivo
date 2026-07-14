@@ -34,6 +34,7 @@ public class FileTransferServiceTests : IDisposable
             new FileSizeValidator(),
             new FileLockChecker(),
             compressorMock.Object,
+            new FilePurgeService(new FileMaskMatcher(), Mock.Of<ILogger<FilePurgeService>>()),
             Mock.Of<ILogger<FileTransferService>>());
     }
 
