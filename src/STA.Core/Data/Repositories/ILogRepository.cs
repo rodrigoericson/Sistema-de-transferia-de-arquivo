@@ -1,4 +1,4 @@
-namespace STA.Worker.Data.Repositories;
+namespace STA.Core.Data.Repositories;
 
 /// <summary>
 /// Contrato para persistência de logs de processo.

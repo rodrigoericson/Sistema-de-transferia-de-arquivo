@@ -1,8 +1,8 @@
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
-using STA.Worker.Models;
+using STA.Core.Models;
 
-namespace STA.Worker.Services;
+namespace STA.Core.Services;
 
 public interface IPathConfigLoader
 {

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
-using STA.Worker.Data.Repositories;
-using STA.Worker.Services;
-using STA.Worker.Settings;
+using STA.Core.Data.Repositories;
+using STA.Core.Services;
+using STA.Core.Settings;
 
 namespace STA.Worker;
 
@@ -116,7 +116,7 @@ public class Worker : BackgroundService
         ReportarResultado(totals);
     }
 
-    private async Task<IReadOnlyList<Models.TransferChain>?> CarregarChainsAsync(
+    private async Task<IReadOnlyList<STA.Core.Models.TransferChain>?> CarregarChainsAsync(
         IPathConfigLoader pathLoader,
         StaSettings settings,
         ILogRepository logRepository,
@@ -137,7 +137,7 @@ public class Worker : BackgroundService
     }
 
     private async Task<CicloTotals> ProcessarChainsAsync(
-        IReadOnlyList<Models.TransferChain> chains,
+        IReadOnlyList<STA.Core.Models.TransferChain> chains,
         IFileTransferService transferService,
         IFilePurgeService purgeService,
         StaSettings settings,

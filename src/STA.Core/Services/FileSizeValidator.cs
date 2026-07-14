@@ -1,4 +1,4 @@
-namespace STA.Worker.Services;
+namespace STA.Core.Services;
 
 public interface IFileSizeValidator
 {

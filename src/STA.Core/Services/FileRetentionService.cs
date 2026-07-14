@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
-using STA.Worker.Data.Repositories;
+using STA.Core.Data.Repositories;
 
-namespace STA.Worker.Services;
+namespace STA.Core.Services;
 
 public interface IFileRetentionService
 {

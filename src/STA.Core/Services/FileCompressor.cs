@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace STA.Worker.Services;
+namespace STA.Core.Services;
 
 public interface IFileCompressor
 {

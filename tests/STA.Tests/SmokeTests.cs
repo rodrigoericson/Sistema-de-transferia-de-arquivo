@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using STA.Worker.Data;
-using STA.Worker.Data.Entities;
+using STA.Core.Data;
+using STA.Core.Data.Entities;
 using Xunit;
 
 namespace STA.Tests;

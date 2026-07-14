@@ -1,4 +1,4 @@
-namespace STA.Worker.Settings;
+namespace STA.Core.Settings;
 
 /// <summary>
 /// Configurações da aplicação STA lidas do appsettings.json (seção "StaSettings").

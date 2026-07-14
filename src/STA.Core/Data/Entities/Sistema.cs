@@ -1,4 +1,4 @@
-namespace STA.Worker.Data.Entities;
+namespace STA.Core.Data.Entities;
 
 /// <summary>
 /// Representa um sistema registrado na tabela sta.tbl_sistema.

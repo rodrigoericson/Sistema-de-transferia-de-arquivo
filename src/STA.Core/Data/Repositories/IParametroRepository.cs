@@ -1,4 +1,4 @@
-namespace STA.Worker.Data.Repositories;
+namespace STA.Core.Data.Repositories;
 
 /// <summary>
 /// Contrato para acesso a parâmetros do sistema (horários e período de execução).

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using STA.Worker.Data.Entities;
+using STA.Core.Data.Entities;
 
-namespace STA.Worker.Data;
+namespace STA.Core.Data;
 
 /// <summary>
 /// DbContext principal da aplicação STA.

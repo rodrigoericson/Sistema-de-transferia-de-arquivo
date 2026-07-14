@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace STA.Worker.Data.Repositories;
+namespace STA.Core.Data.Repositories;
 
 /// <summary>
 /// Acesso a parâmetros de configuração do sistema via EF Core.

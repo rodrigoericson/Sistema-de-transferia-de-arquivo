@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace STA.Worker.Services;
+namespace STA.Core.Services;
 
 public interface IFileMaskMatcher
 {

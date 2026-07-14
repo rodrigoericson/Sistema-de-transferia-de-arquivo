@@ -1,4 +1,4 @@
-namespace STA.Worker.Models;
+namespace STA.Core.Models;
 
 public record TransferPath(
     string Etapa,

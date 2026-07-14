@@ -1,4 +1,4 @@
-namespace STA.Worker.Data.Entities;
+namespace STA.Core.Data.Entities;
 
 /// <summary>
 /// Representa um registro de execução de processo de transferência de arquivos.

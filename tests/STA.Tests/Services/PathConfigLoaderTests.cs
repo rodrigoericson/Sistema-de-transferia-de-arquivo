@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Moq;
-using STA.Worker.Services;
+using STA.Core.Services;
 using Xunit;
 
 namespace STA.Tests.Services;

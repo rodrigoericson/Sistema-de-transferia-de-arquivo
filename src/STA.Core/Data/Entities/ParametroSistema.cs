@@ -1,4 +1,4 @@
-namespace STA.Worker.Data.Entities;
+namespace STA.Core.Data.Entities;
 
 /// <summary>
 /// Representa um parâmetro do sistema (horário inicial, final, período de execução).

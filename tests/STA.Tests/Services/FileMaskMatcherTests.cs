@@ -1,4 +1,4 @@
-using STA.Worker.Services;
+using STA.Core.Services;
 using Xunit;
 
 namespace STA.Tests.Services;

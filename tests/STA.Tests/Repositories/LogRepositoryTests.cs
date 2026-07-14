@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using STA.Worker.Data;
-using STA.Worker.Data.Entities;
-using STA.Worker.Data.Repositories;
+using STA.Core.Data;
+using STA.Core.Data.Entities;
+using STA.Core.Data.Repositories;
 using Xunit;
 
 namespace STA.Tests.Repositories;

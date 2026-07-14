@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace STA.Worker.Data.Repositories;
+namespace STA.Core.Data.Repositories;
 
 /// <summary>
 /// Persistência de logs de processo via EF Core + PostgreSQL.

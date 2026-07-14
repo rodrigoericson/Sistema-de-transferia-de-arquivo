@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using STA.Worker;
-using STA.Worker.Data;
-using STA.Worker.Data.Repositories;
-using STA.Worker.Services;
-using STA.Worker.Settings;
+using STA.Core.Data;
+using STA.Core.Data.Repositories;
+using STA.Core.Services;
+using STA.Core.Settings;
 
 var builder = Host.CreateDefaultBuilder(args)
     .UseWindowsService(options =>
