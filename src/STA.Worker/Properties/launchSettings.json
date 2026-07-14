@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "STA.Worker": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "STA_DB_CONN": "Host=localhost;Port=5432;Database=sta;Username=postgres;Password=postgres123",
+        "STA_StaSettings__ArquivoPathsXml": "F:\\Git\\STA\\test-data\\paths_test.xml"
+      }
+    }
+  }
+}
