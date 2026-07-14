@@ -4,8 +4,8 @@
 CREATE OR REPLACE FUNCTION sta.fn_inclui_log_processo(
     p_cd_alias_sistema VARCHAR,
     p_cn_processo INT,
-    p_dt_inicio TIMESTAMP,
-    p_id_status_processo CHAR(1),
+    p_dt_inicio TIMESTAMP WITH TIME ZONE,
+    p_id_status_processo VARCHAR,
     p_qt_registros_processados BIGINT DEFAULT 0,
     p_vl_registros_processados BIGINT DEFAULT 0,
     p_qt_registros_erro BIGINT DEFAULT 0,

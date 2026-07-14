@@ -33,3 +33,6 @@ Desktop.ini
 appsettings.*.local.json
 appsettings.Production.json
 *.env
+
+## Test data (local)
+test-data/
