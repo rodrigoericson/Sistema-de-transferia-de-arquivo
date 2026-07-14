@@ -45,7 +45,7 @@ public class LogRepository : ILogRepository
                         {qtRegistrosErro},
                         {vlRegistrosErro},
                         {xmlObservacao}
-                    )")
+                    ) AS ""Value""")
                 .ToListAsync(cancellationToken);
 
             return result.FirstOrDefault();
