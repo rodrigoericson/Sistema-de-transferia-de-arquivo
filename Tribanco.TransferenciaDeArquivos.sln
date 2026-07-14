@@ -1,0 +1,26 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Tribanco.TransferenciaDeArquivos", "Tribanco.TransferenciaDeArquivos.vbproj", "{72254600-22F5-487C-AE7F-9988B9DED713}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "STA.Tests", "STA.Tests\STA.Tests.vbproj", "{A1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{72254600-22F5-487C-AE7F-9988B9DED713}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72254600-22F5-487C-AE7F-9988B9DED713}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72254600-22F5-487C-AE7F-9988B9DED713}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72254600-22F5-487C-AE7F-9988B9DED713}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D450666-467A-47EE-8FFB-93376C6A0FD4}
+	EndGlobalSection
+EndGlobal
