@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using STA.Api.Common;
@@ -6,6 +7,7 @@ using STA.Core.Data;
 
 namespace STA.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/v1/logs")]
 public class LogsController : ControllerBase
