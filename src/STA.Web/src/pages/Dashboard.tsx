@@ -42,7 +42,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="border-b border-gray-800 px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <img src="/sta-logo.png" alt="STA" className="h-10" />
+          <img src="/sta-logo.png" alt="STA" className="h-12" />
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500">{username}</span>

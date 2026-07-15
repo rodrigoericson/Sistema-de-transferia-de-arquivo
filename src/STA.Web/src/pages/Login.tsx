@@ -28,7 +28,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950">
       <div className="mb-8">
-        <img src="/sta-logo.png" alt="STA" className="h-24 mx-auto" />
+        <img src="/sta-logo.png" alt="STA" className="h-36 mx-auto" />
       </div>
 
       <div className="w-full max-w-sm p-8 bg-gray-900 rounded-lg border border-gray-800 shadow-lg shadow-green-900/10">
