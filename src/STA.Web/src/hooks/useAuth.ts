@@ -2,6 +2,26 @@ import { create } from 'zustand';
 import api from '../lib/api';
 import type { ApiResponse, LoginResponse } from '../types';
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
+function getStoredToken(): string | null {
+  const token = sessionStorage.getItem('sta_token');
+  if (token && isTokenExpired(token)) {
+    sessionStorage.removeItem('sta_token');
+    sessionStorage.removeItem('sta_username');
+    sessionStorage.removeItem('sta_role');
+    return null;
+  }
+  return token;
+}
+
 interface AuthState {
   token: string | null;
   username: string | null;
@@ -12,19 +32,19 @@ interface AuthState {
 }
 
 export const useAuth = create<AuthState>((set) => ({
-  token: localStorage.getItem('sta_token'),
-  username: localStorage.getItem('sta_username'),
-  role: localStorage.getItem('sta_role'),
-  isAuthenticated: !!localStorage.getItem('sta_token'),
+  token: getStoredToken(),
+  username: getStoredToken() ? sessionStorage.getItem('sta_username') : null,
+  role: getStoredToken() ? sessionStorage.getItem('sta_role') : null,
+  isAuthenticated: !!getStoredToken(),
 
   login: async (username: string, password: string) => {
     try {
       const { data } = await api.post<ApiResponse<LoginResponse>>('/auth/login', { username, password });
       if (data.success && data.data) {
         const { token, username: user, role } = data.data;
-        localStorage.setItem('sta_token', token);
-        localStorage.setItem('sta_username', user);
-        localStorage.setItem('sta_role', role);
+        sessionStorage.setItem('sta_token', token);
+        sessionStorage.setItem('sta_username', user);
+        sessionStorage.setItem('sta_role', role);
         set({ token, username: user, role, isAuthenticated: true });
         return true;
       }
@@ -35,9 +55,9 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('sta_token');
-    localStorage.removeItem('sta_username');
-    localStorage.removeItem('sta_role');
+    sessionStorage.removeItem('sta_token');
+    sessionStorage.removeItem('sta_username');
+    sessionStorage.removeItem('sta_role');
     set({ token: null, username: null, role: null, isAuthenticated: false });
   },
 }));

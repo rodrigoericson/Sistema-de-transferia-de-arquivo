@@ -87,6 +87,8 @@ export default function Etapas() {
                   <p className="text-xs text-gray-600 mt-1">Ordem: {etapa.nrOrdemExecucao} • Criado em {new Date(etapa.dtCriacao).toLocaleDateString('pt-BR')}</p>
                 </div>
                 <div className="flex gap-2">
+                  <button onClick={() => navigate(`/etapas/${etapa.cnEtapa}/editar`)}
+                    className="px-2 py-1 text-xs text-blue-400 hover:bg-blue-900/30 rounded">Editar</button>
                   <button onClick={() => handleToggle(etapa)}
                     className={`px-2 py-1 text-xs rounded ${etapa.flAtivo ? 'text-yellow-400 hover:bg-yellow-900/30' : 'text-green-400 hover:bg-green-900/30'}`}>
                     {etapa.flAtivo ? 'Desativar' : 'Ativar'}
