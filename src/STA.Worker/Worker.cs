@@ -62,6 +62,12 @@ public class Worker : BackgroundService
 
     private async Task ExecutarCicloAsync(CancellationToken stoppingToken)
     {
+        if (await IsWorkerPausedAsync(stoppingToken))
+        {
+            _logger.LogDebug("Worker pausado via banco. Ciclo ignorado.");
+            return;
+        }
+
         await AtualizarParametrosAsync(stoppingToken);
 
         if (_ultimosParametros is null)
@@ -333,6 +339,22 @@ public class Worker : BackgroundService
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Falha ao buscar parâmetros. Mantendo último snapshot válido.");
+        }
+    }
+
+    private async Task<bool> IsWorkerPausedAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<STA.Core.Data.StaDbContext>();
+            var param = await context.Parametros
+                .FirstOrDefaultAsync(p => p.CnParametroSistema == 4, stoppingToken);
+            return param?.CdParametroSistema == "true";
+        }
+        catch
+        {
+            return false;
         }
     }
 }
