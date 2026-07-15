@@ -40,3 +40,6 @@ appsettings.Production.json
 
 ## Test data (local)
 test-data/
+
+## Legacy (VB.NET original + paths.xml de produção)
+legacy/
