@@ -16,47 +16,12 @@
 <br>
 
 <p align="center">
-  <img src="./sta-control-center.svg" width="100%">
+  <img src="./sta-dashboard.svg" width="100%">
 </p>
 
 <br>
 
-## 📋 O que é
-
-Nasceu como um Windows Service em **VB.NET + Sybase** (legado corporativo). Reescrito do zero em **.NET 10 + EF Core + PostgreSQL**, mantendo o comportamento essencial (janela horária, multi-origem, fan-out, log por arquivo) mas com configuração 100% via banco e telemetria granular.
-
-A migração inteira está nesse repositório — commit por commit, fase por fase.
-
-## 🏗️ Arquitetura
-
-<p align="center">
-  <img src="./sta-architecture.svg" width="100%">
-</p>
-
-## 🗺️ Roadmap
-
-<p align="center">
-  <img src="./sta-roadmap.svg" width="100%">
-</p>
-
-## 🧰 Stack
-
-| Camada | Tecnologia | Badge |
-|--------|------------|-------|
-| Linguagem | C# / .NET 10 | ![dotnet](https://img.shields.io/badge/-512BD4?style=flat-square&logo=.net&logoColor=white) |
-| ORM | EF Core 10 | ![efcore](https://img.shields.io/badge/-512BD4?style=flat-square&logo=nuget&logoColor=white) |
-| Banco | PostgreSQL 15 | ![postgres](https://img.shields.io/badge/-336791?style=flat-square&logo=postgresql&logoColor=white) |
-| Logging | Structured (built-in) | ![logs](https://img.shields.io/badge/-F25022?style=flat-square&logo=elasticstack&logoColor=white) |
-| Testes | xUnit + Moq | ![xunit](https://img.shields.io/badge/-3DDC84?style=flat-square&logo=xunit&logoColor=white) |
-| Service | Windows Service | ![windows](https://img.shields.io/badge/-0078D6?style=flat-square&logo=windows&logoColor=white) |
-
 ## 🚀 Subindo o ambiente
-
-Você vai precisar de:
-
-![dotnet](https://img.shields.io/badge/.NET-10.0-512BD4?style=flat-square&logo=.net&logoColor=white)
-![docker](https://img.shields.io/badge/Docker-latest-2496ED?style=flat-square&logo=docker&logoColor=white)
-![git](https://img.shields.io/badge/Git-latest-F05032?style=flat-square&logo=git&logoColor=white)
 
 ```bash
 # 1. Postgres
@@ -91,11 +56,6 @@ STA.sln                # Solução
 ## 💡 Por que esse repo existe
 
 Migração de VB.NET Framework 2.0 → .NET 10 não é trivial. Mas é o tipo de projeto que mostra **disciplina técnica**: refactor incremental, testes crescendo junto com features.
-Cada commit conta parte da história. Leia em ordem:
-
-```
-Initial commit → ... → Fase 5.3 → Fase 6 (API) → ...
-```
 
 ## 📜 Licença
 
