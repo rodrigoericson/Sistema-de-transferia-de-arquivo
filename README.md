@@ -11,7 +11,7 @@
 
 <br>
 
-> Serviço que move arquivos entre servidores de produção. Roda 24/7, dorme entre ciclos, acorda, transfere, dorme de novo.
+> Serviço Windows que automatiza transferência de arquivos entre servidores, com janela horária configurável, fan-out multi-destino, compactação 7-Zip e log granular por arquivo.
 
 <br>
 
