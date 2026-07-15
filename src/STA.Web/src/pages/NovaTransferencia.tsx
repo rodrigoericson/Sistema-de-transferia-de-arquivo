@@ -3,11 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../lib/api';
 import Header from '../components/layout/Header';
+import DiretorioInput from '../components/shared/DiretorioInput';
+import { useValidarDiretorio } from '../hooks/useValidarDiretorio';
 
 export default function NovaTransferencia() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const { resultado, validar } = useValidarDiretorio();
 
   const [nome, setNome] = useState('');
   const [mascara, setMascara] = useState('*');
@@ -107,18 +110,26 @@ export default function NovaTransferencia() {
           {/* Origem */}
           <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
             <h2 className="text-sm text-green-400 font-mono mb-3">📂 ORIGEM</h2>
-            <input value={origem} onChange={(e) => setOrigem(e.target.value)}
+            <DiretorioInput
+              value={origem}
+              onChange={setOrigem}
               placeholder="\\servidor\pasta\onde-arquivo-é-gerado"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono focus:outline-none focus:border-green-500" />
+              validacao={resultado['origem']}
+              onValidar={() => validar('origem', origem)}
+            />
             <p className="text-xs text-gray-600 mt-1">Diretório onde o arquivo é gerado ou depositado</p>
           </div>
 
           {/* Backup */}
           <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
             <h2 className="text-sm text-yellow-400 font-mono mb-3">💾 BACKUP</h2>
-            <input value={backup} onChange={(e) => setBackup(e.target.value)}
+            <DiretorioInput
+              value={backup}
+              onChange={setBackup}
               placeholder="\\servidor\pasta\backup (opcional)"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono focus:outline-none focus:border-green-500" />
+              validacao={resultado['backup']}
+              onValidar={() => validar('backup', backup)}
+            />
             <p className="text-xs text-gray-600 mt-1">Cópia de segurança antes de transferir (deixe vazio se não precisar)</p>
           </div>
 
@@ -127,13 +138,19 @@ export default function NovaTransferencia() {
             <h2 className="text-sm text-blue-400 font-mono mb-3">📤 DESTINOS</h2>
             <div className="space-y-2">
               {destinos.map((d, i) => (
-                <div key={i} className="flex gap-2">
-                  <input value={d} onChange={(e) => updateDestino(i, e.target.value)}
-                    placeholder={`\\servidor\pasta\destino-${i + 1}`}
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono focus:outline-none focus:border-green-500" />
+                <div key={i} className="flex gap-2 items-start">
+                  <div className="flex-1">
+                    <DiretorioInput
+                      value={d}
+                      onChange={(v) => updateDestino(i, v)}
+                      placeholder={`\\servidor\pasta\destino-${i + 1}`}
+                      validacao={resultado[`destino-${i}`]}
+                      onValidar={() => validar(`destino-${i}`, d)}
+                    />
+                  </div>
                   {destinos.length > 1 && (
                     <button type="button" onClick={() => removeDestino(i)}
-                      className="px-2 text-red-400 hover:text-red-300 text-lg">×</button>
+                      className="px-2 pt-2 text-red-400 hover:text-red-300 text-lg">×</button>
                   )}
                 </div>
               ))}
