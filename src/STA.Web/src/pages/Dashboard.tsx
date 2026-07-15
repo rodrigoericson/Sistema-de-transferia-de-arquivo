@@ -27,9 +27,12 @@ export default function Dashboard() {
 
   const fetchErrosRecentes = async () => {
     try {
-      // Busca erros e warnings recentes
-      const erros = await api.get<ApiResponse<PaginatedResponse<LogArquivo>>>('/logs/arquivos?status=E&pageSize=3');
-      const warnings = await api.get<ApiResponse<PaginatedResponse<LogArquivo>>>('/logs/arquivos?status=W&pageSize=3');
+      const seteDiasAtras = new Date();
+      seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+      const de = seteDiasAtras.toISOString().split('T')[0] + 'T00:00:00';
+
+      const erros = await api.get<ApiResponse<PaginatedResponse<LogArquivo>>>(`/logs/arquivos?status=E&pageSize=10&de=${de}`);
+      const warnings = await api.get<ApiResponse<PaginatedResponse<LogArquivo>>>(`/logs/arquivos?status=W&pageSize=10&de=${de}`);
       const items = [
         ...(erros.data.data?.items ?? []),
         ...(warnings.data.data?.items ?? []),
@@ -86,11 +89,11 @@ export default function Dashboard() {
         {errosRecentes.length > 0 && (
           <div className="mb-8 p-4 bg-red-950/30 border border-red-900/50 rounded-lg">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-medium text-red-400">⚠️ Erros e Avisos Recentes</h3>
+              <h3 className="text-sm font-medium text-red-400">⚠️ Erros e Avisos (últimos 7 dias)</h3>
               <button onClick={() => navigate('/logs')} className="text-xs text-red-400 hover:text-red-300">Ver todos →</button>
             </div>
-            <div className="space-y-2">
-              {errosRecentes.slice(0, 3).map((log) => (
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {errosRecentes.map((log) => (
                 <div key={log.cnLogArquivo} className={`rounded p-2 ${log.idStatus === 'E' ? 'bg-red-950/40' : 'bg-yellow-950/40'}`}>
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
@@ -104,9 +107,7 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-            {errosRecentes.length > 3 && (
-              <p className="text-xs text-gray-600 mt-2">+{errosRecentes.length - 3} erro(s) adicional(is)</p>
-            )}
+            <p className="text-xs text-gray-600 mt-2">{errosRecentes.length} ocorrência(s) nos últimos 7 dias</p>
           </div>
         )}
 
