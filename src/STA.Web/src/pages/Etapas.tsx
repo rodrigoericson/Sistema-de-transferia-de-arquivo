@@ -63,7 +63,10 @@ export default function Etapas() {
             <h1 className="text-2xl font-mono text-green-400">Transferências</h1>
             <p className="text-sm text-gray-500 mt-1">Gerencie suas cadeias de transferência de arquivos</p>
           </div>
-          <button onClick={() => navigate('/etapas/nova')} className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded">+ Nova Transferência</button>
+          <div className="flex gap-3">
+            <button onClick={() => navigate('/')} className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded">Voltar</button>
+            <button onClick={() => navigate('/etapas/nova')} className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded">+ Nova Transferência</button>
+          </div>
         </div>
 
         {etapas.length === 0 && (
