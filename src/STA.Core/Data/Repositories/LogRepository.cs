@@ -78,4 +78,19 @@ public class LogRepository : ILogRepository
 
         return excluidos;
     }
+
+    public async Task<int> AtualizarFimAsync(
+        int cnLogProcesso,
+        DateTime dtFim,
+        string statusFinal,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Logs
+            .Where(l => l.CnLogProcesso == cnLogProcesso)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(l => l.DtFimProcesso, dtFim)
+                    .SetProperty(l => l.IdStatusProcesso, statusFinal),
+                cancellationToken);
+    }
 }

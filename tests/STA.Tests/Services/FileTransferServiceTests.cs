@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
+using STA.Core.Data.Entities;
+using STA.Core.Data.Repositories;
 using STA.Core.Models;
 using STA.Core.Services;
 using Xunit;
@@ -12,6 +14,7 @@ public class FileTransferServiceTests : IDisposable
     private readonly string _sourceDir;
     private readonly string _destDir;
     private readonly string _backupDir;
+    private readonly Mock<ILogArquivoRepository> _logArquivoMock;
     private readonly FileTransferService _service;
 
     public FileTransferServiceTests()
@@ -29,19 +32,32 @@ public class FileTransferServiceTests : IDisposable
         compressorMock.Setup(c => c.IsCompressionTypeSupported(It.IsAny<string>())).Returns(false);
         compressorMock.Setup(c => c.IsFileCompressed(It.IsAny<string>())).Returns(false);
 
+        _logArquivoMock = new Mock<ILogArquivoRepository>();
+
         _service = new FileTransferService(
             new FileMaskMatcher(),
             new FileSizeValidator(),
             new FileLockChecker(),
             compressorMock.Object,
             new FilePurgeService(new FileMaskMatcher(), Mock.Of<ILogger<FilePurgeService>>()),
+            _logArquivoMock.Object,
             Mock.Of<ILogger<FileTransferService>>());
     }
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir))
-            Directory.Delete(_tempDir, recursive: true);
+        if (!Directory.Exists(_tempDir))
+            return;
+
+        // Remover atributos ReadOnly de qualquer arquivo antes de excluir
+        foreach (var file in Directory.EnumerateFiles(_tempDir, "*", SearchOption.AllDirectories))
+        {
+            var attrs = File.GetAttributes(file);
+            if (attrs.HasFlag(FileAttributes.ReadOnly))
+                File.SetAttributes(file, attrs & ~FileAttributes.ReadOnly);
+        }
+
+        Directory.Delete(_tempDir, recursive: true);
     }
 
     [Fact]
@@ -50,7 +66,7 @@ public class FileTransferServiceTests : IDisposable
         File.WriteAllText(Path.Combine(_sourceDir, "data.txt"), "conteudo");
 
         var config = CreateConfig("*.txt");
-        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, CancellationToken.None);
+        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, null, CancellationToken.None);
 
         Assert.Equal(1, result.FilesProcessed);
         Assert.Equal(1, result.FilesSucceeded);
@@ -65,7 +81,7 @@ public class FileTransferServiceTests : IDisposable
         File.WriteAllText(Path.Combine(_sourceDir, "report.csv"), "1,2,3");
 
         var config = CreateConfig("*.csv", backupDir: _backupDir);
-        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, CancellationToken.None);
+        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, null, CancellationToken.None);
 
         Assert.Equal(1, result.FilesSucceeded);
         Assert.True(File.Exists(Path.Combine(_backupDir, "report.csv")));
@@ -77,7 +93,7 @@ public class FileTransferServiceTests : IDisposable
         File.WriteAllText(Path.Combine(_sourceDir, "data.log"), "log");
 
         var config = CreateConfig("*.txt");
-        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, CancellationToken.None);
+        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, null, CancellationToken.None);
 
         Assert.Equal(1, result.FilesProcessed);
         Assert.Equal(0, result.FilesSucceeded);
@@ -101,7 +117,7 @@ public class FileTransferServiceTests : IDisposable
             TamanhoInicialArqBytes: 1000,
             TamanhoFinalArqBytes: 2000);
 
-        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, CancellationToken.None);
+        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, null, CancellationToken.None);
 
         Assert.Equal(0, result.FilesSucceeded);
         Assert.True(File.Exists(Path.Combine(_sourceDir, "small.txt")));
@@ -115,7 +131,7 @@ public class FileTransferServiceTests : IDisposable
         File.WriteAllText(Path.Combine(_sourceDir, "c.log"), "ccc");
 
         var config = CreateConfig("*.txt");
-        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, CancellationToken.None);
+        var result = await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, null, CancellationToken.None);
 
         Assert.Equal(3, result.FilesProcessed);
         Assert.Equal(2, result.FilesSucceeded);
@@ -128,7 +144,7 @@ public class FileTransferServiceTests : IDisposable
     public async Task TransferAsync_DiretorioOrigemInexistente_RetornaVazio()
     {
         var config = CreateConfig("*");
-        var result = await _service.TransferAsync(config, @"C:\inexistente_sta_test", _destDir, true, 30000, CancellationToken.None);
+        var result = await _service.TransferAsync(config, @"C:\inexistente_sta_test", _destDir, true, 30000, null, CancellationToken.None);
 
         Assert.Equal(0, result.FilesProcessed);
         Assert.Single(result.ErrorMessages);
@@ -154,9 +170,73 @@ public class FileTransferServiceTests : IDisposable
             TamanhoInicialArqBytes: 0,
             TamanhoFinalArqBytes: 0);
 
-        await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, CancellationToken.None);
+        await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, null, CancellationToken.None);
 
         Assert.False(File.Exists(oldFile));
+    }
+
+    [Fact]
+    public async Task TransferAsync_ArquivoValido_GravaLogArquivo()
+    {
+        File.WriteAllText(Path.Combine(_sourceDir, "ok.txt"), "conteudo");
+
+        var config = CreateConfig("*.txt");
+        await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, 42, CancellationToken.None);
+
+        _logArquivoMock.Verify(
+            r => r.InserirAsync(
+                It.Is<LogArquivo>(l =>
+                    l.NmArquivo == "ok.txt"
+                    && l.IdStatus == "S"
+                    && l.CnLogProcesso == 42
+                    && l.DsDiretorioOrigem == _sourceDir
+                    && l.DsDiretorioDestino == _destDir),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task TransferAsync_ArquivoFalha_GravaLogArquivoComErro()
+    {
+        File.WriteAllText(Path.Combine(_sourceDir, "fail.txt"), "data");
+
+        // Usar um destino readonly para forçar falha na cópia
+        var destReadonly = Path.Combine(_tempDir, "readonly_dest");
+        Directory.CreateDirectory(destReadonly);
+        // Criar arquivo com mesmo nome para que overwrite=false cause erro
+        File.WriteAllText(Path.Combine(destReadonly, "fail.txt"), "existing");
+        File.SetAttributes(Path.Combine(destReadonly, "fail.txt"), FileAttributes.ReadOnly);
+
+        var config = CreateConfig("*.txt");
+        var result = await _service.TransferAsync(config, _sourceDir, destReadonly, true, 30000, 99, CancellationToken.None);
+
+        Assert.Equal(1, result.FilesFailed);
+
+        _logArquivoMock.Verify(
+            r => r.InserirAsync(
+                It.Is<LogArquivo>(l =>
+                    l.NmArquivo == "fail.txt"
+                    && l.IdStatus == "E"
+                    && l.CnLogProcesso == 99
+                    && !string.IsNullOrEmpty(l.DsMensagem)),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        // Cleanup: remover readonly para que Dispose funcione
+        File.SetAttributes(Path.Combine(destReadonly, "fail.txt"), FileAttributes.Normal);
+    }
+
+    [Fact]
+    public async Task TransferAsync_ArquivoIgnoradoPorMascara_NaoGravaLog()
+    {
+        File.WriteAllText(Path.Combine(_sourceDir, "skip.log"), "data");
+
+        var config = CreateConfig("*.txt");
+        await _service.TransferAsync(config, _sourceDir, _destDir, true, 30000, 1, CancellationToken.None);
+
+        _logArquivoMock.Verify(
+            r => r.InserirAsync(It.IsAny<LogArquivo>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     private TransferPath CreateConfig(string mask, string backupDir = "")

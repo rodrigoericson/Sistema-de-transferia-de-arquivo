@@ -53,4 +53,11 @@ public class StaSettings
     /// Se true, gera logs de sucesso no banco de dados.
     /// </summary>
     public bool GeraLogSucessoBancoDados { get; set; } = true;
+
+    /// <summary>
+    /// Se true, usa o arquivo paths.xml como fonte de configuração em vez do banco.
+    /// Útil como contingência operacional quando o banco está indisponível.
+    /// Padrão: false (banco é o caminho oficial).
+    /// </summary>
+    public bool UseXmlFallback { get; set; } = false;
 }

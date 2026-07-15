@@ -112,9 +112,22 @@ public class Worker : BackgroundService
             return;
 
         var dtInicio = DateTime.UtcNow;
-        var totals = await ProcessarChainsAsync(chains, transferService, purgeService, settings, stoppingToken);
 
-        await RegistrarResultadoAsync(logRepository, settings, dtInicio, totals, stoppingToken);
+        // Abrir log de ciclo com status 'R' (rodando) para ter o cnLogProcesso disponível
+        int? cnLogProcesso = null;
+        try
+        {
+            cnLogProcesso = await logRepository.InserirLogAsync(
+                _aliasSistema, settings.CnProcesso, dtInicio, "R", 0, 0, 0, 0, string.Empty, stoppingToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Falha ao abrir log de ciclo. Prosseguindo sem cn_log_processo.");
+        }
+
+        var totals = await ProcessarChainsAsync(chains, transferService, purgeService, settings, cnLogProcesso, stoppingToken);
+
+        await FecharLogCicloAsync(logRepository, settings, dtInicio, totals, cnLogProcesso, stoppingToken);
         ReportarResultado(totals);
     }
 
@@ -125,7 +138,24 @@ public class Worker : BackgroundService
         ILogRepository logRepository,
         CancellationToken stoppingToken)
     {
-        // Tenta carregar do banco primeiro (ignora falha — pode não ter tabelas ainda)
+        if (settings.UseXmlFallback)
+        {
+            try
+            {
+                var xmlChains = pathLoader.CarregarCaminhos(settings.ArquivoPathsXml);
+                _logger.LogDebug("UseXmlFallback ativo. Carregadas {Count} cadeias do XML.", xmlChains.Count);
+                return xmlChains;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Falha ao carregar configuração via XML.");
+                await logRepository.InserirLogAsync(
+                    _aliasSistema, settings.CnProcesso, DateTime.UtcNow, "E", 0, 0, 0, 0,
+                    BuildLogObservacao("Leitura configuração (XML)", ex.Message), stoppingToken);
+                return null;
+            }
+        }
+
         try
         {
             var systemId = await GetCnSistemaAsync(stoppingToken);
@@ -138,23 +168,19 @@ public class Worker : BackgroundService
                     return chains;
                 }
             }
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogDebug(ex, "Tabelas de etapa não disponíveis no banco. Usando fallback XML.");
-        }
 
-        // Fallback: carregar do XML
-        try
-        {
-            return pathLoader.CarregarCaminhos(settings.ArquivoPathsXml);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogError(ex, "Falha ao carregar configuração de transferência.");
+            _logger.LogError("Nenhuma etapa configurada no banco para '{Sistema}'. Ciclo ignorado.", _aliasSistema);
             await logRepository.InserirLogAsync(
                 _aliasSistema, settings.CnProcesso, DateTime.UtcNow, "E", 0, 0, 0, 0,
-                BuildLogObservacao("Leitura configuração", ex.Message), stoppingToken);
+                BuildLogObservacao("Leitura configuração", "Nenhuma etapa ativa no banco."), stoppingToken);
+            return null;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Falha ao carregar etapas do banco.");
+            await logRepository.InserirLogAsync(
+                _aliasSistema, settings.CnProcesso, DateTime.UtcNow, "E", 0, 0, 0, 0,
+                BuildLogObservacao("Leitura configuração (banco)", ex.Message), stoppingToken);
             return null;
         }
     }
@@ -175,6 +201,7 @@ public class Worker : BackgroundService
         IFileTransferService transferService,
         IFilePurgeService purgeService,
         StaSettings settings,
+        int? cnLogProcesso,
         CancellationToken stoppingToken)
     {
         var totals = new CicloTotals();
@@ -189,6 +216,7 @@ public class Worker : BackgroundService
                     chain.Nodes[i + 1].DiretorioPrincipal,
                     settings.SobreEscreverArquivos,
                     settings.TimeoutCompactacaoMs,
+                    cnLogProcesso,
                     stoppingToken);
 
                 totals.Add(result);
@@ -201,24 +229,40 @@ public class Worker : BackgroundService
         return totals;
     }
 
-    private async Task RegistrarResultadoAsync(
+    private async Task FecharLogCicloAsync(
         ILogRepository logRepository,
         StaSettings settings,
         DateTime dtInicio,
         CicloTotals totals,
+        int? cnLogProcesso,
         CancellationToken stoppingToken)
     {
-        if (!settings.GeraLogSucessoBancoDados && totals.FilesFailed == 0)
-            return;
-
         var status = totals.FilesFailed > 0 ? "W" : "O";
-        var obs = BuildLogObservacao(
-            "Transferencia de arquivos",
-            $"Processados: {totals.FilesProcessed}, Sucesso: {totals.FilesSucceeded}, Falhas: {totals.FilesFailed}");
 
-        await logRepository.InserirLogAsync(
-            _aliasSistema, settings.CnProcesso, dtInicio, status,
-            totals.FilesSucceeded, 0, totals.FilesFailed, 0, obs, stoppingToken);
+        if (!settings.GeraLogSucessoBancoDados && totals.FilesFailed == 0)
+        {
+            // Se não gera log de sucesso mas abriu o log, fecha com status 'O'
+            if (cnLogProcesso.HasValue)
+                await logRepository.AtualizarFimAsync(cnLogProcesso.Value, DateTime.UtcNow, status, stoppingToken);
+            return;
+        }
+
+        if (cnLogProcesso.HasValue)
+        {
+            // Fecha o log aberto no início do ciclo
+            await logRepository.AtualizarFimAsync(cnLogProcesso.Value, DateTime.UtcNow, status, stoppingToken);
+        }
+        else
+        {
+            // Fallback: inserir log completo (caso abertura tenha falhado)
+            var obs = BuildLogObservacao(
+                "Transferencia de arquivos",
+                $"Processados: {totals.FilesProcessed}, Sucesso: {totals.FilesSucceeded}, Falhas: {totals.FilesFailed}");
+
+            await logRepository.InserirLogAsync(
+                _aliasSistema, settings.CnProcesso, dtInicio, status,
+                totals.FilesSucceeded, 0, totals.FilesFailed, 0, obs, stoppingToken);
+        }
     }
 
     private void ReportarResultado(CicloTotals totals)

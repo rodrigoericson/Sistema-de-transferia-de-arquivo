@@ -9,4 +9,6 @@ public record TransferPath(
     string CompactaOrigemTipo,
     string DescompactaDestino,
     long TamanhoInicialArqBytes,
-    long TamanhoFinalArqBytes);
+    long TamanhoFinalArqBytes,
+    int? CnEtapa = null,
+    int? CnRota = null);

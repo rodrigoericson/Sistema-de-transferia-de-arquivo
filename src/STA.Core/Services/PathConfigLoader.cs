@@ -80,7 +80,9 @@ public class PathConfigLoader : IPathConfigLoader
             CompactaOrigemTipo: GetValue(element, "CompactaOrigemTipo"),
             DescompactaDestino: GetValue(element, "DescompactaDestino"),
             TamanhoInicialArqBytes: GetLong(element, "TamanhoInicialArqBytes"),
-            TamanhoFinalArqBytes: GetLong(element, "TamanhoFinalArqBytes"));
+            TamanhoFinalArqBytes: GetLong(element, "TamanhoFinalArqBytes"),
+            CnEtapa: null,
+            CnRota: null);
     }
 
     private static string GetValue(XElement parent, string name)

@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using STA.Core.Data.Entities;
+using STA.Core.Data.Repositories;
 using STA.Core.Models;
 
 namespace STA.Core.Services;
@@ -17,6 +19,7 @@ public interface IFileTransferService
         string destinationDirectory,
         bool overwriteExisting,
         int timeoutCompactacaoMs,
+        int? cnLogProcesso,
         CancellationToken cancellationToken);
 }
 
@@ -27,6 +30,7 @@ public class FileTransferService : IFileTransferService
     private readonly IFileLockChecker _lockChecker;
     private readonly IFileCompressor _compressor;
     private readonly IFilePurgeService _purgeService;
+    private readonly ILogArquivoRepository _logArquivoRepository;
     private readonly ILogger<FileTransferService> _logger;
 
     public FileTransferService(
@@ -35,6 +39,7 @@ public class FileTransferService : IFileTransferService
         IFileLockChecker lockChecker,
         IFileCompressor compressor,
         IFilePurgeService purgeService,
+        ILogArquivoRepository logArquivoRepository,
         ILogger<FileTransferService> logger)
     {
         _maskMatcher = maskMatcher;
@@ -42,6 +47,7 @@ public class FileTransferService : IFileTransferService
         _lockChecker = lockChecker;
         _compressor = compressor;
         _purgeService = purgeService;
+        _logArquivoRepository = logArquivoRepository;
         _logger = logger;
     }
 
@@ -51,6 +57,7 @@ public class FileTransferService : IFileTransferService
         string destinationDirectory,
         bool overwriteExisting,
         int timeoutCompactacaoMs,
+        int? cnLogProcesso,
         CancellationToken cancellationToken)
     {
         if (!Directory.Exists(sourceDirectory))
@@ -74,16 +81,26 @@ public class FileTransferService : IFileTransferService
             if (!IsEligible(file, config))
                 continue;
 
+            var dtInicioArquivo = DateTime.UtcNow;
             try
             {
-                await ProcessFileAsync(file, config, sourceDirectory, destinationDirectory, overwriteExisting, timeoutCompactacaoMs, cancellationToken);
+                var (compressed, decompressed) = await ProcessFileAsync(
+                    file, config, sourceDirectory, destinationDirectory, overwriteExisting, timeoutCompactacaoMs, cancellationToken);
                 succeeded++;
+
+                await GravarLogArquivoAsync(
+                    cnLogProcesso, config, file.Name, sourceDirectory, destinationDirectory,
+                    file.Length, dtInicioArquivo, "S", null, compressed, decompressed, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 failed++;
                 errors.Add($"{file.Name}: {ex.Message}");
                 _logger.LogError(ex, "Erro ao transferir '{File}'.", file.Name);
+
+                await GravarLogArquivoAsync(
+                    cnLogProcesso, config, file.Name, sourceDirectory, destinationDirectory,
+                    file.Length, dtInicioArquivo, "E", ex.Message, false, false, cancellationToken);
             }
         }
 
@@ -112,7 +129,7 @@ public class FileTransferService : IFileTransferService
         return true;
     }
 
-    private async Task ProcessFileAsync(
+    private async Task<(bool Compressed, bool Decompressed)> ProcessFileAsync(
         FileInfo file,
         TransferPath config,
         string sourceDirectory,
@@ -121,18 +138,20 @@ public class FileTransferService : IFileTransferService
         int timeoutMs,
         CancellationToken cancellationToken)
     {
-        var (filePath, fileName) = await TryCompressAsync(file, config, sourceDirectory, timeoutMs, cancellationToken);
+        var (filePath, fileName, compressed) = await TryCompressAsync(file, config, sourceDirectory, timeoutMs, cancellationToken);
 
         CopyToDestination(filePath, fileName, destinationDirectory, overwriteExisting);
         CopyToBackup(filePath, fileName, config.DiretorioBackup, overwriteExisting);
 
-        await TryDecompressAtDestinationAsync(
+        var decompressed = await TryDecompressAtDestinationAsync(
             Path.Combine(destinationDirectory, fileName), destinationDirectory, config, timeoutMs, cancellationToken);
 
         CleanupSource(file.FullName, filePath);
+
+        return (compressed, decompressed);
     }
 
-    private async Task<(string FilePath, string FileName)> TryCompressAsync(
+    private async Task<(string FilePath, string FileName, bool Compressed)> TryCompressAsync(
         FileInfo file,
         TransferPath config,
         string sourceDirectory,
@@ -141,7 +160,7 @@ public class FileTransferService : IFileTransferService
     {
         if (!_compressor.IsCompressionTypeSupported(config.CompactaOrigemTipo)
             || _compressor.IsFileCompressed(file.FullName))
-            return (file.FullName, file.Name);
+            return (file.FullName, file.Name, false);
 
         var archiveName = file.Name + "." + config.CompactaOrigemTipo.ToLowerInvariant();
         var archivePath = Path.Combine(sourceDirectory, archiveName);
@@ -150,10 +169,10 @@ public class FileTransferService : IFileTransferService
             file.FullName, archivePath, config.CompactaOrigemTipo, timeoutMs, cancellationToken);
 
         if (ok)
-            return (archivePath, archiveName);
+            return (archivePath, archiveName, true);
 
         _logger.LogWarning("Falha na compactação de '{File}'. Transferindo original.", file.Name);
-        return (file.FullName, file.Name);
+        return (file.FullName, file.Name, false);
     }
 
     private static void CopyToDestination(string sourceFilePath, string fileName, string destDir, bool overwrite)
@@ -178,7 +197,7 @@ public class FileTransferService : IFileTransferService
         }
     }
 
-    private async Task TryDecompressAtDestinationAsync(
+    private async Task<bool> TryDecompressAtDestinationAsync(
         string destinationFilePath,
         string destinationDirectory,
         TransferPath config,
@@ -188,7 +207,7 @@ public class FileTransferService : IFileTransferService
         if (string.IsNullOrWhiteSpace(config.DescompactaDestino)
             || !config.DescompactaDestino.Equals("SIM", StringComparison.OrdinalIgnoreCase)
             || !_compressor.IsFileCompressed(destinationFilePath))
-            return;
+            return false;
 
         var ok = await _compressor.DecompressAsync(
             destinationFilePath, destinationDirectory, timeoutMs, cancellationToken);
@@ -197,6 +216,8 @@ public class FileTransferService : IFileTransferService
             File.Delete(destinationFilePath);
         else
             _logger.LogWarning("Falha na descompactação de '{File}' no destino.", Path.GetFileName(destinationFilePath));
+
+        return ok;
     }
 
     private static void CleanupSource(string originalPath, string transferredPath)
@@ -215,5 +236,46 @@ public class FileTransferService : IFileTransferService
 
         var cutoff = DateTime.Now.AddDays(-config.DiasExcluir);
         _purgeService.PurgeDirectory(config.DiretorioBackup, cutoff, config.MascaraArq);
+    }
+
+    private async Task GravarLogArquivoAsync(
+        int? cnLogProcesso,
+        TransferPath config,
+        string nomeArquivo,
+        string diretorioOrigem,
+        string diretorioDestino,
+        long tamanhoBytes,
+        DateTime dtInicio,
+        string status,
+        string? mensagem,
+        bool compactado,
+        bool descompactado,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var log = new LogArquivo
+            {
+                CnLogProcesso = cnLogProcesso,
+                CnEtapa = config.CnEtapa,
+                CnRota = config.CnRota,
+                NmArquivo = nomeArquivo,
+                DsDiretorioOrigem = diretorioOrigem,
+                DsDiretorioDestino = diretorioDestino,
+                NrTamanhoBytes = tamanhoBytes,
+                DtInicio = dtInicio,
+                DtFim = DateTime.UtcNow,
+                IdStatus = status,
+                DsMensagem = mensagem,
+                FlCompactado = compactado,
+                FlDescompactado = descompactado
+            };
+
+            await _logArquivoRepository.InserirAsync(log, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Falha ao gravar log de arquivo '{File}'.", nomeArquivo);
+        }
     }
 }

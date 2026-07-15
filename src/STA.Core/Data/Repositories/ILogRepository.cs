@@ -13,7 +13,7 @@ public interface ILogRepository
     /// <param name="aliasSistema">Alias do sistema (e.g., "STA").</param>
     /// <param name="cnProcesso">Número do processo.</param>
     /// <param name="dtInicio">Data/hora de início da operação.</param>
-    /// <param name="status">Status: 'O' (sucesso), 'W' (aviso), 'E' (erro).</param>
+    /// <param name="status">Status: 'R' (rodando), 'O' (sucesso), 'W' (aviso), 'E' (erro).</param>
     /// <param name="qtRegistrosProcessados">Quantidade de registros processados.</param>
     /// <param name="vlRegistrosProcessados">Valor de registros processados.</param>
     /// <param name="qtRegistrosErro">Quantidade de registros com erro.</param>
@@ -46,5 +46,20 @@ public interface ILogRepository
         string aliasSistema,
         int cnProcesso,
         int diasManter,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Atualiza a data/hora de fim e status de um log de processo aberto.
+    /// Usado para fechar um log que foi aberto com status 'R' (rodando).
+    /// </summary>
+    /// <param name="cnLogProcesso">ID do log de processo a atualizar.</param>
+    /// <param name="dtFim">Data/hora de término da operação.</param>
+    /// <param name="statusFinal">Status final: 'O' (sucesso), 'W' (aviso), 'E' (erro).</param>
+    /// <param name="cancellationToken">Token de cancelamento.</param>
+    /// <returns>Número de registros atualizados (0 ou 1).</returns>
+    Task<int> AtualizarFimAsync(
+        int cnLogProcesso,
+        DateTime dtFim,
+        string statusFinal,
         CancellationToken cancellationToken = default);
 }

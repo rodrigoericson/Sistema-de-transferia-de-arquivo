@@ -41,7 +41,9 @@ public class EtapaConfigProvider : IEtapaConfigProvider
                     CompactaOrigemTipo: rota.DsCompactaOrigemTipo ?? string.Empty,
                     DescompactaDestino: string.Empty,
                     TamanhoInicialArqBytes: rota.NrTamanhoInicialBytes,
-                    TamanhoFinalArqBytes: rota.NrTamanhoFinalBytes));
+                    TamanhoFinalArqBytes: rota.NrTamanhoFinalBytes,
+                    CnEtapa: etapa.CnEtapa,
+                    CnRota: rota.CnRota));
 
                 // Cada destino gera um nó destino
                 foreach (var destino in rota.Destinos)
@@ -55,7 +57,9 @@ public class EtapaConfigProvider : IEtapaConfigProvider
                         CompactaOrigemTipo: string.Empty,
                         DescompactaDestino: destino.DsDescompactaDestino ?? string.Empty,
                         TamanhoInicialArqBytes: 0,
-                        TamanhoFinalArqBytes: 0));
+                        TamanhoFinalArqBytes: 0,
+                        CnEtapa: etapa.CnEtapa,
+                        CnRota: rota.CnRota));
                 }
             }
 
