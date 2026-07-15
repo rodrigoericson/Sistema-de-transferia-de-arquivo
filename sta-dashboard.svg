@@ -35,7 +35,7 @@
   <text x="30" y="40" fill="#7dffb3" font-size="22" font-family="JetBrains Mono, Consolas, monospace" filter="url(#glowMain)">CENTRAL DE CONTROLE STA</text>
   <text x="430" y="40" fill="#7dffb3" font-size="22" font-family="JetBrains Mono, Consolas, monospace" class="cursor">_</text>
   <text x="720" y="40" fill="#555" font-size="13" font-family="JetBrains Mono, Consolas, monospace">Sistema de Transferência de Arquivos</text>
-  <text x="940" y="40" fill="#00ff66" font-size="14" font-family="JetBrains Mono, Consolas, monospace">v6.0</text>
+  <text x="940" y="40" fill="#00ff66" font-size="14" font-family="JetBrains Mono, Consolas, monospace">v7.0</text>
   <line x1="20" y1="52" x2="980" y2="52" stroke="#00ff8855"/>
 
   <!-- MÓDULOS + MÉTRICAS -->
@@ -56,20 +56,20 @@
     <text x="300" y="162" fill="#00ff66" font-size="12">72 TESTES OK</text>
 
     <circle cx="45" cy="187" r="5" fill="#00ff66"/>
-    <text x="60" y="192" fill="#00ff66">EF CORE 10 + MIGRATIONS</text>
-    <text x="300" y="192" fill="#00ff66" font-size="12">7 TABELAS</text>
+    <text x="60" y="192" fill="#00ff66">API REST (ASP.NET Core)</text>
+    <text x="300" y="192" fill="#00ff66" font-size="12">23 ENDPOINTS</text>
 
-    <circle cx="45" cy="217" r="5" fill="#ffd54d" class="pulse-dot"/>
-    <text x="60" y="222" fill="#ffd54d">API REST (ASP.NET Core)</text>
-    <text x="300" y="222" fill="#ffd54d" font-size="12">FASE 6 [EM PROGRESSO]</text>
+    <circle cx="45" cy="217" r="5" fill="#00ff66"/>
+    <text x="60" y="222" fill="#00ff66">FRONTEND REACT</text>
+    <text x="300" y="222" fill="#00ff66" font-size="12">8 PÁGINAS</text>
 
-    <circle cx="45" cy="247" r="5" fill="#333"/>
-    <text x="60" y="252" fill="#666">DASHBOARD REACT</text>
-    <text x="300" y="252" fill="#444" font-size="12">FASE 7</text>
+    <circle cx="45" cy="247" r="5" fill="#00ff66"/>
+    <text x="60" y="252" fill="#00ff66">AUTH (JWT + SESSION)</text>
+    <text x="300" y="252" fill="#00ff66" font-size="12">ATIVO</text>
 
     <circle cx="45" cy="277" r="5" fill="#333"/>
-    <text x="60" y="282" fill="#666">AUTH (AD + JWT + TOTP)</text>
-    <text x="300" y="282" fill="#444" font-size="12">FASE 6e</text>
+    <text x="60" y="282" fill="#666">NOTIFICAÇÕES + CI/CD</text>
+    <text x="300" y="282" fill="#444" font-size="12">FASE 8</text>
   </g>
 
   <g font-family="JetBrains Mono, Consolas, monospace" font-size="14">
@@ -80,14 +80,13 @@
 
     <text x="540" y="132" fill="#7dffb3">FASES</text>
     <rect x="660" y="119" width="220" height="11" rx="2" fill="#1a1a1a"/>
-    <rect x="660" y="119" width="138" height="11" rx="2" fill="#00ff66"/>
-    <rect x="798" y="119" width="27" height="11" rx="2" fill="#ffd54d" class="wip-bar"/>
-    <text x="900" y="132" fill="#55ff55" font-size="13">5/8</text>
+    <rect x="660" y="119" width="192" height="11" rx="2" fill="#00ff66"/>
+    <text x="900" y="132" fill="#55ff55" font-size="13">7/8</text>
 
     <text x="540" y="162" fill="#7dffb3">COMMITS</text>
     <rect x="660" y="149" width="220" height="11" rx="2" fill="#1a1a1a"/>
-    <rect x="660" y="149" width="185" height="11" rx="2" fill="#00ff66"/>
-    <text x="900" y="162" fill="#55ff55" font-size="13">15</text>
+    <rect x="660" y="149" width="220" height="11" rx="2" fill="#00ff66"/>
+    <text x="900" y="162" fill="#55ff55" font-size="13">49</text>
 
     <text x="540" y="192" fill="#7dffb3">TABELAS</text>
     <rect x="660" y="179" width="220" height="11" rx="2" fill="#1a1a1a"/>
@@ -96,13 +95,13 @@
 
     <text x="540" y="222" fill="#7dffb3">ENDPOINTS</text>
     <rect x="660" y="209" width="220" height="11" rx="2" fill="#1a1a1a"/>
-    <rect x="660" y="209" width="165" height="11" rx="2" fill="#00ff66"/>
-    <text x="900" y="222" fill="#55ff55" font-size="13">15</text>
+    <rect x="660" y="209" width="220" height="11" rx="2" fill="#00ff66"/>
+    <text x="900" y="222" fill="#55ff55" font-size="13">23</text>
 
-    <text x="540" y="252" fill="#7dffb3">BUILD</text>
+    <text x="540" y="252" fill="#7dffb3">PÁGINAS</text>
     <rect x="660" y="239" width="220" height="11" rx="2" fill="#1a1a1a"/>
     <rect x="660" y="239" width="220" height="11" rx="2" fill="#00ff66"/>
-    <text x="900" y="252" fill="#55ff55" font-size="13">0 ERROS</text>
+    <text x="900" y="252" fill="#55ff55" font-size="13">8</text>
   </g>
 
   <!-- ARQUITETURA -->
@@ -117,10 +116,10 @@
   <text x="50" y="439" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ Log granular</text>
   <text x="50" y="456" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">└─ Ciclo 5 min</text>
 
-  <rect x="30" y="490" width="240" height="80" rx="4" fill="#1a1a0d" stroke="#ffd54d" stroke-width="1" stroke-dasharray="4,3"/>
-  <text x="50" y="513" fill="#ffd54d" font-size="13" font-family="JetBrains Mono, Consolas, monospace">◐ STA.API [EM PROGRESSO]</text>
-  <text x="50" y="533" fill="#888" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ CRUD + Swagger</text>
-  <text x="50" y="550" fill="#888" font-size="11" font-family="JetBrains Mono, Consolas, monospace">└─ Controle do Worker</text>
+  <rect x="30" y="490" width="240" height="80" rx="4" fill="#0d1a0d" stroke="#00ff66" stroke-width="1"/>
+  <text x="50" y="513" fill="#00ff66" font-size="13" font-family="JetBrains Mono, Consolas, monospace">■ STA.API</text>
+  <text x="50" y="533" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ CRUD + Swagger + JWT</text>
+  <text x="50" y="550" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">└─ Controle do Worker</text>
 
   <rect x="380" y="380" width="240" height="120" rx="4" fill="#0d0d1a" stroke="#6688ff" stroke-width="1"/>
   <text x="400" y="403" fill="#6688ff" font-size="13" font-family="JetBrains Mono, Consolas, monospace">■ STA.CORE</text>
@@ -140,16 +139,16 @@
   <text x="750" y="495" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_log_processo</text>
   <text x="750" y="512" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">└─ tbl_log_arquivo</text>
 
-  <rect x="730" y="530" width="240" height="42" rx="4" fill="#111" stroke="#444" stroke-width="1" stroke-dasharray="4,3"/>
-  <text x="750" y="555" fill="#666" font-size="13" font-family="JetBrains Mono, Consolas, monospace">○ STA.WEB [FASE 7]</text>
+  <rect x="730" y="530" width="240" height="42" rx="4" fill="#0d1a0d" stroke="#00ff66" stroke-width="1"/>
+  <text x="750" y="555" fill="#00ff66" font-size="13" font-family="JetBrains Mono, Consolas, monospace">■ STA.WEB (React)</text>
 
   <line x1="270" y1="410" x2="380" y2="430" stroke="#00ff6666" stroke-width="1.5"/>
-  <line x1="270" y1="530" x2="380" y2="470" stroke="#ffd54d55" stroke-width="1.5"/>
+  <line x1="270" y1="530" x2="380" y2="470" stroke="#00ff6666" stroke-width="1.5"/>
   <line x1="620" y1="440" x2="730" y2="440" stroke="#6688ff66" stroke-width="1.5"/>
-  <line x1="730" y1="551" x2="270" y2="530" stroke="#33333366" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="730" y1="551" x2="270" y2="530" stroke="#00ff6644" stroke-width="1"/>
 
   <text x="305" y="405" fill="#00ff6644" font-size="9" font-family="JetBrains Mono, Consolas, monospace">usa</text>
-  <text x="305" y="510" fill="#ffd54d44" font-size="9" font-family="JetBrains Mono, Consolas, monospace">usa</text>
+  <text x="305" y="510" fill="#00ff6644" font-size="9" font-family="JetBrains Mono, Consolas, monospace">usa</text>
   <text x="650" y="432" fill="#6688ff44" font-size="9" font-family="JetBrains Mono, Consolas, monospace">EF Core</text>
 
   <!-- ROADMAP -->
@@ -157,9 +156,8 @@
   <text x="30" y="615" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">ROADMAP DA MISSÃO</text>
 
   <rect x="30" y="628" width="940" height="6" rx="3" fill="#1a1a1a"/>
-  <rect x="30" y="628" width="590" height="6" rx="3" fill="#00ff66"/>
-  <rect x="620" y="628" width="50" height="6" rx="3" fill="#ffd54d" class="wip-bar"/>
-  <text x="930" y="624" fill="#555" font-size="10" font-family="JetBrains Mono, Consolas, monospace">63%</text>
+  <rect x="30" y="628" width="822" height="6" rx="3" fill="#00ff66"/>
+  <text x="930" y="624" fill="#555" font-size="10" font-family="JetBrains Mono, Consolas, monospace">87%</text>
 
   <line x1="60" y1="650" x2="60" y2="855" stroke="#00ff8822" stroke-width="2"/>
 
@@ -170,37 +168,31 @@
     <text x="80" y="679" fill="#444" font-size="11">Plumbing, janela horária, transferência core, refatoração</text>
 
     <circle cx="60" cy="705" r="6" fill="#00ff66"/>
-    <text x="80" y="702" fill="#00ff66" font-size="14">FASE 5.1</text>
+    <text x="80" y="702" fill="#00ff66" font-size="14">FASES 5.1-5.3</text>
     <text x="240" y="702" fill="#7dffb3" font-size="11">CONCLUÍDO</text>
-    <text x="80" y="719" fill="#444" font-size="11">STA.Core extraído como biblioteca compartilhada</text>
+    <text x="80" y="719" fill="#444" font-size="11">Core compartilhado, tabelas config, log granular por arquivo</text>
 
     <circle cx="60" cy="745" r="6" fill="#00ff66"/>
-    <text x="80" y="742" fill="#00ff66" font-size="14">FASE 5.2</text>
+    <text x="80" y="742" fill="#00ff66" font-size="14">FASE 6</text>
     <text x="240" y="742" fill="#7dffb3" font-size="11">CONCLUÍDO</text>
-    <text x="80" y="759" fill="#444" font-size="11">Tabelas Etapa/Rota/Destino + configuração via banco</text>
+    <text x="80" y="759" fill="#444" font-size="11">Web API REST + CRUD + JWT + Worker control</text>
 
     <circle cx="60" cy="785" r="6" fill="#00ff66"/>
-    <text x="80" y="782" fill="#00ff66" font-size="14">FASE 5.3</text>
+    <text x="80" y="782" fill="#00ff66" font-size="14">FASE 7</text>
     <text x="240" y="782" fill="#7dffb3" font-size="11">CONCLUÍDO</text>
-    <text x="80" y="799" fill="#444" font-size="11">Log granular por arquivo + auditoria de segurança</text>
+    <text x="80" y="799" fill="#444" font-size="11">Frontend React + Login + Dashboard + CRUD + Logs</text>
 
-    <circle cx="60" cy="825" r="6" fill="none" stroke="#ffd54d" stroke-width="2"/>
-    <circle cx="60" cy="825" r="3" fill="#ffd54d" class="pulse-dot"/>
-    <text x="80" y="822" fill="#ffd54d" font-size="14">FASE 6</text>
-    <text x="240" y="822" fill="#ffd54d" font-size="11">EM PROGRESSO</text>
-    <text x="80" y="839" fill="#888" font-size="11">Web API REST + CRUD + Logs + Controle do Worker + Auth</text>
-
-    <circle cx="60" cy="860" r="6" fill="none" stroke="#444" stroke-width="1.5"/>
-    <text x="80" y="857" fill="#666" font-size="14">FASES 7-8</text>
-    <text x="240" y="857" fill="#444" font-size="11">NA FILA</text>
-    <text x="80" y="874" fill="#333" font-size="11">Dashboard React + Notificações + CI/CD + Docker</text>
+    <circle cx="60" cy="835" r="6" fill="none" stroke="#444" stroke-width="1.5"/>
+    <text x="80" y="832" fill="#666" font-size="14">FASE 8</text>
+    <text x="240" y="832" fill="#444" font-size="11">NA FILA</text>
+    <text x="80" y="849" fill="#333" font-size="11">Notificações + Audit trail + CI/CD + Docker + AD/LDAP</text>
   </g>
 
   <!-- RODAPÉ -->
-  <line x1="20" y1="885" x2="980" y2="885" stroke="#00ff8833"/>
+  <line x1="20" y1="875" x2="980" y2="875" stroke="#00ff8833"/>
   <g fill="#555" font-size="12" font-family="JetBrains Mono, Consolas, monospace">
-    <text x="30" y="905">.NET 10 │ EF Core 10 │ PostgreSQL 15 │ xUnit + Moq │ Windows Service │ ASP.NET Core</text>
-    <text x="760" y="905" fill="#00ff66">TODOS OS SISTEMAS OPERACIONAIS</text>
+    <text x="30" y="900">.NET 10 │ EF Core 10 │ PostgreSQL 15 │ React 18 │ Tailwind │ xUnit │ JWT</text>
+    <text x="760" y="900" fill="#00ff66">TODOS OS SISTEMAS OPERACIONAIS</text>
   </g>
 
 </svg>

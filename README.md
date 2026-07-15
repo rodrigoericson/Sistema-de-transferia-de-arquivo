@@ -4,8 +4,8 @@
 
 ![Status](https://img.shields.io/badge/status-ativo-3DDC84?style=flat-square)
 ![Cobertura](https://img.shields.io/badge/cobertura-72%2F72%20testes-3DDC84?style=flat-square\&logo=xunit\&logoColor=white)
-![Fase](https://img.shields.io/badge/fase-5.3%20%E2%9C%93%20%E2%86%92%206-FF6B6B?style=flat-square)
-![Stack](https://img.shields.io/badge/stack-.NET%2010%20%2B%20EF%20Core%20%2B%20Postgres-512BD4?style=flat-square\&logo=.net\&logoColor=white)
+![Fase](https://img.shields.io/badge/fase-7%20%E2%9C%93%20%E2%86%92%208-FF6B6B?style=flat-square)
+![Stack](https://img.shields.io/badge/stack-.NET%2010%20%2B%20React%20%2B%20Postgres-512BD4?style=flat-square\&logo=.net\&logoColor=white)
 
 </div>
 
