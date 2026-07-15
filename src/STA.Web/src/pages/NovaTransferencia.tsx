@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import Header from '../components/layout/Header';
 
 export default function NovaTransferencia() {
   const navigate = useNavigate();
@@ -71,8 +72,9 @@ export default function NovaTransferencia() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      <Header />
+      <div className="max-w-2xl mx-auto p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-mono text-green-400">Nova Transferência</h1>
           <button onClick={() => navigate('/')} className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded">Voltar</button>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import type { ApiResponse, PaginatedResponse, Etapa } from '../types';
+import Header from '../components/layout/Header';
 
 export default function Etapas() {
   const [etapas, setEtapas] = useState<Etapa[]>([]);
@@ -40,8 +41,9 @@ export default function Etapas() {
   if (loading) return <div className="p-8 text-gray-400">Carregando...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-8">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      <Header />
+      <div className="max-w-5xl mx-auto p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-mono text-green-400">Etapas de Transferência</h1>
           <div className="flex gap-3">

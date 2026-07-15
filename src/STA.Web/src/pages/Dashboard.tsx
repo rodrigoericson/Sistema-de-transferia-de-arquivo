@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import type { ApiResponse, PaginatedResponse, WorkerStatus, LogArquivo } from '../types';
-import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
 
 export default function Dashboard() {
   const [status, setStatus] = useState<WorkerStatus | null>(null);
   const [errosRecentes, setErrosRecentes] = useState<LogArquivo[]>([]);
   const [loading, setLoading] = useState(true);
-  const logout = useAuth((s) => s.logout);
-  const username = useAuth((s) => s.username);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,16 +46,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      {/* Header */}
-      <header className="border-b border-gray-800 px-8 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <img src="/sta-logo.png" alt="STA" className="h-12" />
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">{username}</span>
-          <button onClick={logout} className="text-sm text-red-400 hover:text-red-300">Sair</button>
-        </div>
-      </header>
+      <Header />
 
       {/* Content */}
       <div className="max-w-5xl mx-auto p-8">

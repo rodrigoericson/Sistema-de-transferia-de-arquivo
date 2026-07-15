@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import type { ApiResponse, PaginatedResponse, LogArquivo } from '../types';
+import Header from '../components/layout/Header';
 
 export default function Logs() {
   const [logs, setLogs] = useState<LogArquivo[]>([]);
@@ -35,8 +36,9 @@ export default function Logs() {
   const pageCount = Math.ceil(total / pageSize);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      <Header />
+      <div className="max-w-6xl mx-auto p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-mono text-green-400">Logs de Transferência</h1>
           <button onClick={() => navigate('/')} className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded">Voltar</button>
