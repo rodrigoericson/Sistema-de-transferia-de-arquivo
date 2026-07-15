@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import api from '../lib/api';
 import Header from '../components/layout/Header';
 
@@ -66,8 +67,11 @@ export default function NovaTransferencia() {
       alert('Transferência criada com sucesso!');
       navigate('/etapas');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erro ao salvar.';
-      setError(msg);
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError(err instanceof Error ? err.message : 'Erro ao salvar.');
+      }
     }
     setSaving(false);
   };

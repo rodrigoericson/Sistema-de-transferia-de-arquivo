@@ -85,6 +85,10 @@ public class EtapasController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResponse<EtapaDto>>> Create([FromBody] CreateEtapaDto dto, CancellationToken ct = default)
     {
+        var duplicado = await _context.Etapas.AnyAsync(e => e.NmEtapa == dto.NmEtapa, ct);
+        if (duplicado)
+            return BadRequest(new ApiResponse<EtapaDto>(false, null, "Já existe uma transferência com esse nome."));
+
         var sistema = await _context.Sistemas.FirstOrDefaultAsync(ct);
         if (sistema is null)
             return BadRequest(new ApiResponse<EtapaDto>(false, null, "Sistema não configurado no banco."));
