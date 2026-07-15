@@ -33,9 +33,9 @@ public class LogsController : ControllerBase
         if (!string.IsNullOrEmpty(status))
             query = query.Where(l => l.IdStatusProcesso == status);
         if (de.HasValue)
-            query = query.Where(l => l.DtInicio >= de.Value);
+            query = query.Where(l => l.DtInicio >= DateTime.SpecifyKind(de.Value, DateTimeKind.Utc));
         if (ate.HasValue)
-            query = query.Where(l => l.DtInicio <= ate.Value);
+            query = query.Where(l => l.DtInicio <= DateTime.SpecifyKind(ate.Value, DateTimeKind.Utc));
 
         var total = await query.CountAsync(ct);
 
@@ -106,9 +106,9 @@ public class LogsController : ControllerBase
         if (!string.IsNullOrEmpty(arquivo))
             query = query.Where(l => EF.Functions.ILike(l.NmArquivo, $"%{arquivo}%"));
         if (de.HasValue)
-            query = query.Where(l => l.DtInicio >= de.Value);
+            query = query.Where(l => l.DtInicio >= DateTime.SpecifyKind(de.Value, DateTimeKind.Utc));
         if (ate.HasValue)
-            query = query.Where(l => l.DtInicio <= ate.Value);
+            query = query.Where(l => l.DtInicio <= DateTime.SpecifyKind(ate.Value, DateTimeKind.Utc));
 
         var total = await query.CountAsync(ct);
 
