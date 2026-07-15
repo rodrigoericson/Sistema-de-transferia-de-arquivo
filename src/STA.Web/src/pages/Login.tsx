@@ -26,7 +26,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#0b1118' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: '#080d11' }}>
       {/* Lado esquerdo — Logo */}
       <div className="hidden md:flex flex-1 items-center justify-center p-12">
         <img src="/sta-logo.png" alt="STA" className="w-full max-w-md" />
@@ -36,7 +36,7 @@ export default function Login() {
       <div className="hidden md:block w-px bg-gray-800 my-16" />
 
       {/* Lado direito — Formulário */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
+      <div className="flex-1 flex flex-col justify-center p-8 pl-16">
         {/* Logo mobile */}
         <div className="md:hidden mb-8">
           <img src="/sta-logo.png" alt="STA" className="h-28 mx-auto" />
