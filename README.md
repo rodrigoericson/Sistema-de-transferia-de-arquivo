@@ -2,12 +2,6 @@
 
 <div align="center">
 
-<p align="center">
-  <img src="./sta-control-center.svg" width="100%">
-</p>
-
-<br>
-
 ![Status](https://img.shields.io/badge/status-active-3DDC84?style=flat-square)
 ![Coverage](https://img.shields.io/badge/coverage-72%2F72%20tests-3DDC84?style=flat-square&logo=xunit&logoColor=white)
 ![Phase](https://img.shields.io/badge/fase-5.3%20%E2%9C%93%20%E2%86%92%206-FF6B6B?style=flat-square)
@@ -21,6 +15,12 @@
 
 <br>
 
+<p align="center">
+  <img src="./sta-control-center.svg" width="100%">
+</p>
+
+<br>
+
 ## 📋 O que é
 
 Nasceu como um Windows Service em **VB.NET + Sybase** (legado corporativo). Reescrito do zero em **.NET 10 + EF Core + PostgreSQL**, mantendo o comportamento essencial (janela horária, multi-origem, fan-out, log por arquivo) mas com configuração 100% via banco e telemetria granular.
@@ -29,40 +29,26 @@ A migração inteira está nesse repositório — commit por commit, fase por fa
 
 ## 🏗️ Arquitetura
 
-```
- Worker (ciclo 5min)          PostgreSQL            Web API (Fase 6)
- ──────────────────          ──────────            ─────────────────
-   Carrega config  ────────▶  tbl_etapa     ◀────  CRUD etapas/rotas
-   Transfere files ────────▶  tbl_log_arquivo ◀───  GET logs/status
-   Grava resultado ────────▶  tbl_log_processo ◀── Pause/Resume
-```
+<p align="center">
+  <img src="./sta-architecture.svg" width="100%">
+</p>
 
-- ⚙️ **Worker** — serviço Windows, roda em background, transfere e loga
-- 🌐 **API** — (em construção) expõe CRUD, consulta de logs, controle do Worker
-- 🗄️ **Banco** — ponto central: configuração + telemetria + estado
+## 🗺️ Roadmap
+
+<p align="center">
+  <img src="./sta-roadmap.svg" width="100%">
+</p>
 
 ## 🧰 Stack
 
 | Camada | Tecnologia | Badge |
 |--------|------------|-------|
 | Linguagem | C# / .NET 10 | ![dotnet](https://img.shields.io/badge/-512BD4?style=flat-square&logo=.net&logoColor=white) |
-| ORM | EF Core 8 | ![efcore](https://img.shields.io/badge/-512BD4?style=flat-square&logo=nuget&logoColor=white) |
+| ORM | EF Core 10 | ![efcore](https://img.shields.io/badge/-512BD4?style=flat-square&logo=nuget&logoColor=white) |
 | Banco | PostgreSQL 15 | ![postgres](https://img.shields.io/badge/-336791?style=flat-square&logo=postgresql&logoColor=white) |
 | Logging | Structured (built-in) | ![logs](https://img.shields.io/badge/-F25022?style=flat-square&logo=elasticstack&logoColor=white) |
 | Testes | xUnit + Moq | ![xunit](https://img.shields.io/badge/-3DDC84?style=flat-square&logo=xunit&logoColor=white) |
 | Service | Windows Service | ![windows](https://img.shields.io/badge/-0078D6?style=flat-square&logo=windows&logoColor=white) |
-
-## 🗺️ Roadmap
-
-| Fase | Status | Descrição | Badge |
-|------|:------:|-----------|-------|
-| 1-3 | ✅ | Plumbing, janela horária, transferência core | ![done](https://img.shields.io/badge/-3DDC84?style=flat-square) |
-| 5.1 | ✅ | Extrai STA.Core como lib compartilhada | ![done](https://img.shields.io/badge/-3DDC84?style=flat-square) |
-| 5.2 | ✅ | Tabelas Etapa/Rota/Destino + fallback banco→XML | ![done](https://img.shields.io/badge/-3DDC84?style=flat-square) |
-| 5.3 | ✅ | Log granular por arquivo (tbl_log_arquivo) | ![done](https://img.shields.io/badge/-3DDC84?style=flat-square) |
-| 6 | 🚧 | Web API REST + Worker control | ![wip](https://img.shields.io/badge/-FFA500?style=flat-square) |
-| 7 | 📋 | Frontend React + dashboard | ![todo](https://img.shields.io/badge/-lightgrey?style=flat-square) |
-| 8 | 📋 | Notificações, audit trail, CI/CD | ![todo](https://img.shields.io/badge/-lightgrey?style=flat-square) |
 
 ## 🚀 Subindo o ambiente
 
@@ -95,6 +81,7 @@ dotnet test STA.sln
 src/
 ├── STA.Core/          # Domínio, entidades, repos, services, models
 ├── STA.Worker/        # BackgroundService + migrations + Program.cs
+├── STA.Api/           # Web API REST (Fase 6)
 tests/
 └── STA.Tests/         # xUnit, 72 testes
 docker-compose.yml     # Postgres dev
@@ -107,7 +94,7 @@ Migração de VB.NET Framework 2.0 → .NET 10 não é trivial. Mas é o tipo de
 Cada commit conta parte da história. Leia em ordem:
 
 ```
-Initial commit → ... → Fase 5.3 → ...
+Initial commit → ... → Fase 5.3 → Fase 6 (API) → ...
 ```
 
 ## 📜 Licença
