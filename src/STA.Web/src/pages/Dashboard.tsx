@@ -107,9 +107,12 @@ export default function Dashboard() {
         {/* Navigation */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <NavCard title="Transferências" description="Gerenciar etapas, rotas e destinos" onClick={() => navigate('/etapas')} />
-          <NavCard title="Logs" description="Consultar logs de transferência" onClick={() => navigate('/logs')} />
+          <NavCard title="Logs" description="Ver registros de transferência de hoje" onClick={() => navigate('/logs')} />
           <NavCard title="Nova Transferência" description="Criar nova cadeia de transferência" onClick={() => navigate('/etapas/nova')} accent />
         </div>
+
+        {/* Última atualização */}
+        <p className="text-xs text-gray-700 text-center mt-8">Última atualização: {new Date().toLocaleTimeString('pt-BR')} (atualiza a cada 30s)</p>
       </div>
     </div>
   );
