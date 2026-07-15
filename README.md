@@ -2,6 +2,12 @@
 
 <div align="center">
 
+<p align="center">
+  <img src="./sta-control-center.svg" width="100%">
+</p>
+
+<br>
+
 ![Status](https://img.shields.io/badge/status-active-3DDC84?style=flat-square)
 ![Coverage](https://img.shields.io/badge/coverage-72%2F72%20tests-3DDC84?style=flat-square&logo=xunit&logoColor=white)
 ![Phase](https://img.shields.io/badge/fase-5.3%20%E2%9C%93%20%E2%86%92%206-FF6B6B?style=flat-square)
