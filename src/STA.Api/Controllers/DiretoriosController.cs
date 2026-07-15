@@ -17,13 +17,39 @@ public class DiretoriosController : ControllerBase
 
         var path = request.Path.Trim();
 
-        // Verifica se já existe
+        // Apenas verifica se existe (não cria)
         if (Directory.Exists(path))
         {
             return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("existe", "Diretório encontrado.", true)));
         }
 
-        // Tenta criar
+        // Verifica se o parent existe (para saber se é criável)
+        try
+        {
+            var parent = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(parent) && Directory.Exists(parent))
+            {
+                return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("nao_existe", "Diretório não existe, mas pode ser criado.", false)));
+            }
+            return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("inacessivel", "Caminho inacessível ou diretório pai não existe.", false)));
+        }
+        catch (Exception ex)
+        {
+            return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("erro", $"Erro: {ex.Message}", false)));
+        }
+    }
+
+    [HttpPost("criar")]
+    public ActionResult<ApiResponse<ValidacaoDiretorioResult>> Criar([FromBody] ValidarDiretorioRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Path))
+            return BadRequest(new ApiResponse<ValidacaoDiretorioResult>(false, null, "Caminho é obrigatório."));
+
+        var path = request.Path.Trim();
+
+        if (Directory.Exists(path))
+            return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("existe", "Diretório já existe.", true)));
+
         try
         {
             Directory.CreateDirectory(path);
@@ -31,11 +57,7 @@ public class DiretoriosController : ControllerBase
         }
         catch (UnauthorizedAccessException)
         {
-            return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("sem_permissao", "Sem permissão para criar o diretório.", false)));
-        }
-        catch (IOException ex)
-        {
-            return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("inacessivel", $"Caminho inacessível: {ex.Message}", false)));
+            return Ok(new ApiResponse<ValidacaoDiretorioResult>(true, new ValidacaoDiretorioResult("sem_permissao", "Sem permissão para criar.", false)));
         }
         catch (Exception ex)
         {
