@@ -277,17 +277,19 @@ public class FileTransferService : IFileTransferService
             return originalFileName;
 
         var name = Path.GetFileNameWithoutExtension(originalFileName);
-        var ext = Path.GetExtension(originalFileName);
+        var ext = Path.GetExtension(originalFileName).TrimStart('.');
         var now = DateTime.Now;
 
-        return padrao
-            .Replace("{NAME}", name)
-            .Replace("{EXT}", ext.TrimStart('.'))
-            .Replace("{DATE}", now.ToString("yyyyMMdd"))
-            .Replace("{YEAR}", now.ToString("yyyy"))
-            .Replace("{MONTH}", now.ToString("MM"))
-            .Replace("{DAY}", now.ToString("dd"))
-            .Replace("{TIME}", now.ToString("HHmmss"));
+        var result = padrao
+            .Replace("{NAME}", name, StringComparison.OrdinalIgnoreCase)
+            .Replace("{EXT}", ext, StringComparison.OrdinalIgnoreCase)
+            .Replace("{DATE}", now.ToString("yyyyMMdd"), StringComparison.OrdinalIgnoreCase)
+            .Replace("{YEAR}", now.ToString("yyyy"), StringComparison.OrdinalIgnoreCase)
+            .Replace("{MONTH}", now.ToString("MM"), StringComparison.OrdinalIgnoreCase)
+            .Replace("{DAY}", now.ToString("dd"), StringComparison.OrdinalIgnoreCase)
+            .Replace("{TIME}", now.ToString("HHmmss"), StringComparison.OrdinalIgnoreCase);
+
+        return string.IsNullOrWhiteSpace(result) ? originalFileName : result;
     }
 
     private void PurgeBackupIfNeeded(TransferPath config)
