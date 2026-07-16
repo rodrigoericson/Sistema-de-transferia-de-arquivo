@@ -471,3 +471,15 @@ Adicionar URL Rewrite no IIS para SPA (todas rotas → index.html).
 | Config no banco (não XML) | Editável via tela, sem restart necessário |
 | Log por arquivo (não só por ciclo) | Rastreabilidade granular, debug facilitado |
 | Fan-out sequencial | Previsível, sem race conditions, simples de debugar |
+| Compactação Fast (-mx=3) | 5-10x mais rápido que Ultra, suficiente para envio em rede |
+
+---
+
+## Limitações Conhecidas
+
+| Limitação | Motivo | Workaround |
+|-----------|--------|------------|
+| Arquivo parcial (cópia incompleta na origem) pode ser transferido | Worker valida lock do arquivo, mas se o handle foi liberado (ex: cópia pausada no Explorer) o arquivo aparece como "livre" | Aguarde a cópia terminar antes do próximo ciclo (5 min). Em produção, sistemas geradores mantêm lock durante escrita. |
+| Ciclo não é interrompível mid-transfer | Pausa via API só afeta o próximo ciclo, não o atual | Ciclo termina normalmente; arquivo em transferência não é corrompido (File.Copy é atômico). |
+| Worker e API são processos separados | Estado de execução real-time depende de consultar o banco | Polling de 5s no frontend; etapa mostrada pode ter delay de até 5s. |
+| Countdown pode mostrar "em breve" se Worker não está rodando | Cálculo baseia-se no último ciclo + 5 min | Reiniciar o Worker gera um ciclo imediato e o countdown volta ao normal. |
