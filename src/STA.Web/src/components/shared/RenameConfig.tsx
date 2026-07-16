@@ -50,7 +50,7 @@ export default function RenameConfig({ value, onChange }: Props) {
     }
 
     let padrao = nome.trim();
-    if (incluirData) padrao += '_{DATE}_{TIME}';
+    if (incluirData) padrao += '_{DATE}{TIME}';
     if (alterarExt && novaExt.trim()) {
       padrao += '.' + novaExt.trim().replace(/^\./, '');
     } else {
@@ -65,7 +65,7 @@ export default function RenameConfig({ value, onChange }: Props) {
     const now = new Date();
     let preview = nome.trim();
     if (incluirData) {
-      preview += '_' + now.toISOString().slice(0, 10).replace(/-/g, '') + '_' + now.toTimeString().slice(0, 8).replace(/:/g, '');
+      preview += '_' + now.toISOString().slice(0, 10).replace(/-/g, '') + now.toTimeString().slice(0, 8).replace(/:/g, '');
     }
     if (alterarExt && novaExt.trim()) {
       preview += '.' + novaExt.trim().replace(/^\./, '');
@@ -105,7 +105,7 @@ export default function RenameConfig({ value, onChange }: Props) {
 
       <div className="flex items-center gap-2">
         <input type="checkbox" id="incluir-data" checked={incluirData} onChange={(e) => setIncluirData(e.target.checked)} className="w-3.5 h-3.5" />
-        <label htmlFor="incluir-data" className="text-xs text-gray-400">Incluir data e hora (YYYYMMDD_HHMMSS)</label>
+        <label htmlFor="incluir-data" className="text-xs text-gray-400">Incluir data e hora (YYYYMMDDHHMMSS)</label>
       </div>
 
       <div className="flex items-center gap-2">
