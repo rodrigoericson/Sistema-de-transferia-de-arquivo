@@ -6,3 +6,11 @@ public record WorkerStatusDto(
     string? UltimoCicloStatus,
     int ArquivosHoje,
     int ErrosHoje);
+
+public record ExecucaoDto(
+    bool Executando,
+    bool Pausado,
+    string? EtapaAtual,
+    DateTime? CicloIniciadoEm,
+    DateTime? UltimoCicloFim,
+    DateTime? ProximoCicloEm);

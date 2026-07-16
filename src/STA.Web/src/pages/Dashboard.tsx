@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
-import type { ApiResponse, PaginatedResponse, WorkerStatus, LogArquivo } from '../types';
+import type { ApiResponse, PaginatedResponse, WorkerStatus, LogArquivo, Execucao } from '../types';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 
 export default function Dashboard() {
   const [status, setStatus] = useState<WorkerStatus | null>(null);
   const [errosRecentes, setErrosRecentes] = useState<LogArquivo[]>([]);
+  const [execucao, setExecucao] = useState<Execucao | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchStatus();
     fetchErrosRecentes();
-    const interval = setInterval(() => { fetchStatus(); fetchErrosRecentes(); }, 30000);
+    fetchExecucao();
+    const interval = setInterval(() => { fetchStatus(); fetchErrosRecentes(); fetchExecucao(); }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -23,6 +25,13 @@ export default function Dashboard() {
       if (data.success && data.data) setStatus(data.data);
     } catch { /* handled by interceptor */ }
     setLoading(false);
+  };
+
+  const fetchExecucao = async () => {
+    try {
+      const { data } = await api.get<ApiResponse<Execucao>>('/worker/execucao');
+      if (data.success && data.data) setExecucao(data.data);
+    } catch { /* interceptor */ }
   };
 
   const fetchErrosRecentes = async () => {
@@ -83,6 +92,11 @@ export default function Dashboard() {
               color={status.ultimoCicloStatus === 'O' ? 'green' : 'yellow'}
             />
           </div>
+        )}
+
+        {/* Box de Execução */}
+        {execucao && (
+          <ExecucaoBox execucao={execucao} />
         )}
 
         {/* Warnings / Erros Recentes */}
@@ -161,5 +175,51 @@ function NavCard({ title, description, onClick, accent }: { title: string; descr
       <h3 className={`font-medium mb-1 ${accent ? 'text-green-400' : 'text-gray-100'}`}>{title}</h3>
       <p className="text-sm text-gray-500">{description}</p>
     </button>
+  );
+}
+
+function ExecucaoBox({ execucao }: { execucao: Execucao }) {
+  const [countdown, setCountdown] = useState('');
+
+  useEffect(() => {
+    if (!execucao.proximoCicloEm || execucao.executando) return;
+    const update = () => {
+      const diff = new Date(execucao.proximoCicloEm!).getTime() - Date.now();
+      if (diff <= 0) { setCountdown('00:00'); return; }
+      const min = Math.floor(diff / 60000);
+      const sec = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`);
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [execucao.proximoCicloEm, execucao.executando]);
+
+  if (execucao.pausado) {
+    return (
+      <div className="mb-6 p-4 bg-yellow-950/20 border border-yellow-800/50 rounded-lg flex items-center gap-3">
+        <span className="text-yellow-400 text-lg">⏸</span>
+        <span className="text-sm text-yellow-300">Pausado — aguardando retomada</span>
+      </div>
+    );
+  }
+
+  if (execucao.executando) {
+    return (
+      <div className="mb-6 p-4 bg-green-950/20 border border-green-800/50 rounded-lg flex items-center gap-3">
+        <span className="text-green-400 text-lg animate-pulse">⏳</span>
+        <span className="text-sm text-green-300">{execucao.etapaAtual || 'Processando...'}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6 p-4 bg-gray-900 border border-gray-800 rounded-lg flex items-center gap-3">
+      <span className="text-green-400 text-lg">✓</span>
+      <span className="text-sm text-gray-300">Ciclo concluído</span>
+      {countdown && (
+        <span className="text-sm text-gray-500 ml-auto font-mono">Próximo em {countdown}</span>
+      )}
+    </div>
   );
 }

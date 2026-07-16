@@ -64,6 +64,9 @@ var builder = Host.CreateDefaultBuilder(args)
             return new FileCompressor(settings.Arquivo7Zip, logger);
         });
 
+        // Estado de execução (compartilhado entre Worker e API)
+        services.AddSingleton<EstadoExecucao>();
+
         // Worker
         services.AddHostedService<Worker>();
     });

@@ -51,6 +51,59 @@ public class WorkerController : ControllerBase
         return Ok(new ApiResponse<WorkerStatusDto>(true, result));
     }
 
+    [HttpGet("execucao")]
+    public async Task<ActionResult<ApiResponse<ExecucaoDto>>> GetExecucao(CancellationToken ct = default)
+    {
+        var isPaused = await IsPausedAsync(ct);
+
+        // Verificar se há ciclo aberto (status 'R') — indica execução em andamento
+        var cicloAberto = await _context.Logs
+            .AsNoTracking()
+            .Where(l => l.IdStatusProcesso == "R")
+            .OrderByDescending(l => l.DtInicio)
+            .FirstOrDefaultAsync(ct);
+
+        // Último ciclo concluído
+        var ultimoCiclo = await _context.Logs
+            .AsNoTracking()
+            .Where(l => l.IdStatusProcesso != "R")
+            .OrderByDescending(l => l.DtInicio)
+            .FirstOrDefaultAsync(ct);
+
+        // Última etapa processada (último log de arquivo do ciclo atual)
+        string? etapaAtual = null;
+        if (cicloAberto is not null)
+        {
+            var ultimoArquivo = await _context.LogArquivos
+                .AsNoTracking()
+                .Where(la => la.CnLogProcesso == cicloAberto.CnLogProcesso)
+                .OrderByDescending(la => la.DtInicio)
+                .FirstOrDefaultAsync(ct);
+
+            if (ultimoArquivo?.CnEtapa is not null)
+            {
+                var etapa = await _context.Etapas
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(e => e.CnEtapa == ultimoArquivo.CnEtapa, ct);
+                etapaAtual = etapa?.NmEtapa;
+            }
+        }
+
+        var executando = cicloAberto is not null;
+        var proximoCiclo = ultimoCiclo?.DtFimProcesso?.AddMinutes(5);
+
+        var result = new ExecucaoDto(
+            Executando: executando,
+            Pausado: isPaused,
+            EtapaAtual: etapaAtual,
+            CicloIniciadoEm: cicloAberto?.DtInicio,
+            UltimoCicloFim: ultimoCiclo?.DtFimProcesso,
+            ProximoCicloEm: isPaused ? null : proximoCiclo
+        );
+
+        return Ok(new ApiResponse<ExecucaoDto>(true, result));
+    }
+
     [HttpPost("pause")]
     public async Task<ActionResult<ApiResponse<object>>> Pause(CancellationToken ct = default)
     {

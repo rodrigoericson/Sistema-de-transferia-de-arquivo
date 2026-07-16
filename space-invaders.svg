@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="300" viewBox="0 0 800 300">
+
+  <style>
+    @keyframes moveRight {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(80px); }
+    }
+    @keyframes moveLeft {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(-80px); }
+    }
+    @keyframes shoot {
+      0% { transform: translateY(0); opacity: 1; }
+      80% { transform: translateY(-120px); opacity: 1; }
+      100% { transform: translateY(-120px); opacity: 0; }
+    }
+    @keyframes shoot2 {
+      0% { transform: translateY(0); opacity: 1; }
+      80% { transform: translateY(-100px); opacity: 1; }
+      100% { transform: translateY(-100px); opacity: 0; }
+    }
+    @keyframes enemyShoot {
+      0% { transform: translateY(0); opacity: 0; }
+      10% { opacity: 1; }
+      80% { transform: translateY(80px); opacity: 1; }
+      100% { transform: translateY(80px); opacity: 0; }
+    }
+    @keyframes explode {
+      0%, 70% { opacity: 0; transform: scale(0.5); }
+      75% { opacity: 1; transform: scale(1.5); }
+      100% { opacity: 0; transform: scale(2); }
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    @keyframes playerMove {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(40px); }
+      50% { transform: translateX(20px); }
+      75% { transform: translateX(-30px); }
+    }
+    @keyframes scoreUp {
+      0%, 90% { opacity: 0; }
+      95% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .row1 { animation: moveRight 3s ease-in-out infinite; }
+    .row2 { animation: moveLeft 3.5s ease-in-out infinite; }
+    .row3 { animation: moveRight 4s ease-in-out infinite; }
+    .player { animation: playerMove 4s ease-in-out infinite; }
+    .bullet1 { animation: shoot 1.5s linear infinite; }
+    .bullet2 { animation: shoot2 2s linear 0.8s infinite; }
+    .bullet3 { animation: shoot 1.8s linear 1.2s infinite; }
+    .enemy-bullet1 { animation: enemyShoot 2.5s linear 1s infinite; }
+    .enemy-bullet2 { animation: enemyShoot 3s linear 2s infinite; }
+    .explosion1 { animation: explode 3s linear infinite; }
+    .explosion2 { animation: explode 3s linear 1.5s infinite; }
+    .cursor { animation: blink 1s step-end infinite; }
+    .score-pop { animation: scoreUp 3s linear infinite; }
+  </style>
+
+  <defs>
+    <linearGradient id="bgSI" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000408"/>
+      <stop offset="100%" stop-color="#000204"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgSI)"/>
+  <rect x="5" y="5" width="790" height="290" rx="4" fill="none" stroke="#00ff8844" stroke-width="1"/>
+
+  <!-- Header -->
+  <text x="20" y="25" fill="#00ff88" font-size="12" font-family="JetBrains Mono, Consolas, monospace">SPACE INVADERS</text>
+  <text x="200" y="25" fill="#555" font-size="10" font-family="JetBrains Mono, Consolas, monospace">SCORE: 1337</text>
+  <text x="350" y="25" fill="#555" font-size="10" font-family="JetBrains Mono, Consolas, monospace">HI-SCORE: 9999</text>
+  <text x="550" y="25" fill="#555" font-size="10" font-family="JetBrains Mono, Consolas, monospace">LIVES: ▲ ▲ ▲</text>
+  <text x="720" y="25" fill="#00ff88" font-size="10" font-family="JetBrains Mono, Consolas, monospace" class="cursor">_</text>
+
+  <!-- Aliens Row 1 (top) -->
+  <g class="row1">
+    <text x="180" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+    <text x="230" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+    <text x="280" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+    <text x="330" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+    <text x="380" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+    <text x="430" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+    <text x="480" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+    <text x="530" y="70" fill="#ff4444" font-size="20" font-family="monospace">👾</text>
+  </g>
+
+  <!-- Aliens Row 2 -->
+  <g class="row2">
+    <text x="200" y="105" fill="#ffaa00" font-size="20" font-family="monospace">👽</text>
+    <text x="250" y="105" fill="#ffaa00" font-size="20" font-family="monospace">👽</text>
+    <text x="300" y="105" fill="#ffaa00" font-size="20" font-family="monospace">👽</text>
+    <text x="350" y="105" fill="#ffaa00" font-size="20" font-family="monospace">👽</text>
+    <text x="400" y="105" fill="#ffaa00" font-size="20" font-family="monospace">👽</text>
+    <text x="450" y="105" fill="#ffaa00" font-size="20" font-family="monospace">👽</text>
+    <text x="500" y="105" fill="#ffaa00" font-size="20" font-family="monospace">👽</text>
+  </g>
+
+  <!-- Aliens Row 3 -->
+  <g class="row3">
+    <text x="220" y="140" fill="#00ddff" font-size="20" font-family="monospace">🛸</text>
+    <text x="270" y="140" fill="#00ddff" font-size="20" font-family="monospace">🛸</text>
+    <text x="320" y="140" fill="#00ddff" font-size="20" font-family="monospace">🛸</text>
+    <text x="370" y="140" fill="#00ddff" font-size="20" font-family="monospace">🛸</text>
+    <text x="420" y="140" fill="#00ddff" font-size="20" font-family="monospace">🛸</text>
+    <text x="470" y="140" fill="#00ddff" font-size="20" font-family="monospace">🛸</text>
+  </g>
+
+  <!-- Shields -->
+  <rect x="180" y="220" width="50" height="20" rx="3" fill="#00ff4422" stroke="#00ff44" stroke-width="0.5"/>
+  <rect x="310" y="220" width="50" height="20" rx="3" fill="#00ff4422" stroke="#00ff44" stroke-width="0.5"/>
+  <rect x="440" y="220" width="50" height="20" rx="3" fill="#00ff4422" stroke="#00ff44" stroke-width="0.5"/>
+  <rect x="570" y="220" width="50" height="20" rx="3" fill="#00ff4422" stroke="#00ff44" stroke-width="0.5"/>
+
+  <!-- Player -->
+  <g class="player">
+    <polygon points="390,275 400,255 410,275" fill="#00ff88"/>
+    <rect x="395" y="275" width="10" height="5" fill="#00ff88"/>
+  </g>
+
+  <!-- Player Bullets -->
+  <g class="player">
+    <rect x="399" y="252" width="2" height="10" fill="#00ff88" class="bullet1"/>
+  </g>
+  <rect x="430" y="252" width="2" height="10" fill="#00ff88" class="bullet2"/>
+  <rect x="360" y="252" width="2" height="10" fill="#00ff88" class="bullet3"/>
+
+  <!-- Enemy Bullets -->
+  <rect x="350" y="140" width="2" height="8" fill="#ff4444" class="enemy-bullet1"/>
+  <rect x="450" y="105" width="2" height="8" fill="#ffaa00" class="enemy-bullet2"/>
+
+  <!-- Explosions -->
+  <text x="280" y="70" fill="#ff6600" font-size="16" font-family="monospace" class="explosion1">💥</text>
+  <text x="420" y="105" fill="#ff6600" font-size="16" font-family="monospace" class="explosion2">💥</text>
+
+  <!-- Score popup -->
+  <text x="270" y="60" fill="#00ff88" font-size="9" font-family="JetBrains Mono, monospace" class="score-pop">+100</text>
+
+  <!-- Ground line -->
+  <line x1="15" y1="285" x2="785" y2="285" stroke="#00ff8833" stroke-width="1"/>
+  <text x="20" y="295" fill="#333" font-size="8" font-family="JetBrains Mono, Consolas, monospace">CREDIT 00</text>
+
+</svg>

@@ -15,6 +15,7 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IOptions<StaSettings> _settings;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly EstadoExecucao _estado;
     private readonly string _aliasSistema;
 
     private TimeSpan _interval = TimeSpan.FromMinutes(5);
@@ -23,11 +24,13 @@ public class Worker : BackgroundService
     public Worker(
         ILogger<Worker> logger,
         IOptions<StaSettings> settings,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        EstadoExecucao estado)
     {
         _logger = logger;
         _settings = settings;
         _scopeFactory = scopeFactory;
+        _estado = estado;
         _aliasSistema = settings.Value.NomeSistema;
     }
 
@@ -64,9 +67,13 @@ public class Worker : BackgroundService
     {
         if (await IsWorkerPausedAsync(stoppingToken))
         {
+            _estado.Pausado = true;
+            _estado.Executando = false;
+            _estado.ProximoCicloEm = DateTime.UtcNow.Add(_interval);
             _logger.LogDebug("Worker pausado via banco. Ciclo ignorado.");
             return;
         }
+        _estado.Pausado = false;
 
         await AtualizarParametrosAsync(stoppingToken);
 
@@ -131,9 +138,12 @@ public class Worker : BackgroundService
             _logger.LogWarning(ex, "Falha ao abrir log de ciclo. Prosseguindo sem cn_log_processo.");
         }
 
+        _estado.IniciarCiclo();
+
         var totals = await ProcessarChainsAsync(chains, transferService, purgeService, settings, cnLogProcesso, stoppingToken);
 
         await FecharLogCicloAsync(logRepository, settings, dtInicio, totals, cnLogProcesso, stoppingToken);
+        _estado.FinalizarCiclo(totals.FilesProcessed, DateTime.UtcNow.Add(_interval));
         ReportarResultado(totals);
     }
 
@@ -214,6 +224,8 @@ public class Worker : BackgroundService
 
         foreach (var chain in chains)
         {
+            _estado.SetEtapa(chain.Etapa);
+
             for (int i = 0; i < chain.Nodes.Count - 1; i++)
             {
                 var result = await transferService.TransferAsync(

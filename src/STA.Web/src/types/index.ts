@@ -94,3 +94,12 @@ export interface LoginResponse {
   username: string;
   role: string;
 }
+
+export interface Execucao {
+  executando: boolean;
+  pausado: boolean;
+  etapaAtual: string | null;
+  cicloIniciadoEm: string | null;
+  ultimoCicloFim: string | null;
+  proximoCicloEm: string | null;
+}
