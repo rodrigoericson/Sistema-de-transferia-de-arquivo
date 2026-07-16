@@ -44,6 +44,14 @@ public class Worker : BackgroundService
 
             while (!stoppingToken.IsCancellationRequested)
             {
+                // Se pausado, checa a cada 5 segundos se reativou (resposta rápida ao resume)
+                if (await IsWorkerPausedAsync(stoppingToken))
+                {
+                    _logger.LogDebug("Worker pausado. Aguardando retomada...");
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                    continue;
+                }
+
                 try
                 {
                     await ExecutarCicloAsync(stoppingToken);
