@@ -114,18 +114,22 @@ public class FileTransferService : IFileTransferService
                 // 1. Backup (se configurado)
                 CopyToBackup(filePath, fileName, config.DiretorioBackup, overwriteExisting);
 
-                // 2. Fan-out: copia para TODOS os destinos
+                // 2. Fan-out: copia para TODOS os destinos, rastreia resultado por destino
                 bool fanOutOk = true;
+                var destResults = new List<(string Dir, bool Ok, string? Erro)>();
+
                 foreach (var destDir in destinationDirectories)
                 {
                     try
                     {
                         CopyToDestination(filePath, fileName, destDir, overwriteExisting);
+                        destResults.Add((destDir, true, null));
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Falha ao copiar '{File}' para '{Dest}'.", fileName, destDir);
                         errors.Add($"{file.Name} → {destDir}: {ex.Message}");
+                        destResults.Add((destDir, false, ex.Message));
                         fanOutOk = false;
                     }
                 }
@@ -136,19 +140,14 @@ public class FileTransferService : IFileTransferService
                     CleanupSource(file.FullName, filePath);
                 }
 
-                // 4. Grava log por destino (status S se copia ok, E se falhou)
-                int destIdx = 0;
-                var destErrors = errors.Where(e => e.StartsWith($"{file.Name} →")).ToList();
-                foreach (var destDir in destinationDirectories)
+                // 4. Grava log por destino (S ou E conforme resultado)
+                foreach (var (destDir, ok, erro) in destResults)
                 {
-                    var errMsg = destIdx < destErrors.Count
-                        ? destErrors[destIdx].Split("→", 2)[1].Trim().TrimStart(':').Trim()
-                        : null;
                     await GravarLogArquivoAsync(
                         cnLogProcesso, config, fileName, sourceDirectory, destDir,
-                        file.Length, dtInicioArquivo, errMsg != null ? "E" : "S", errMsg, compressed, false, cancellationToken);
-                    destIdx++;
+                        file.Length, dtInicioArquivo, ok ? "S" : "E", erro, compressed, false, cancellationToken);
                 }
+
                 if (!fanOutOk) failed++;
                 else succeeded++;
             }
