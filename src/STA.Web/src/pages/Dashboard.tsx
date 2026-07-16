@@ -182,10 +182,13 @@ function ExecucaoBox({ execucao }: { execucao: Execucao }) {
   const [countdown, setCountdown] = useState('');
 
   useEffect(() => {
-    if (!execucao.proximoCicloEm || execucao.executando) return;
+    if (!execucao.proximoCicloEm || execucao.executando || execucao.pausado) {
+      setCountdown('');
+      return;
+    }
     const update = () => {
       const diff = new Date(execucao.proximoCicloEm!).getTime() - Date.now();
-      if (diff <= 0) { setCountdown('00:00'); return; }
+      if (diff <= 0) { setCountdown('em breve'); return; }
       const min = Math.floor(diff / 60000);
       const sec = Math.floor((diff % 60000) / 1000);
       setCountdown(`${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`);
@@ -193,13 +196,13 @@ function ExecucaoBox({ execucao }: { execucao: Execucao }) {
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
-  }, [execucao.proximoCicloEm, execucao.executando]);
+  }, [execucao.proximoCicloEm, execucao.executando, execucao.pausado]);
 
   if (execucao.pausado) {
     return (
       <div className="mb-6 p-4 bg-yellow-950/20 border border-yellow-800/50 rounded-lg flex items-center gap-3">
         <span className="text-yellow-400 text-lg">⏸</span>
-        <span className="text-sm text-yellow-300">Pausado — aguardando retomada</span>
+        <span className="text-sm text-yellow-300">Worker pausado — aguardando retomada</span>
       </div>
     );
   }
@@ -217,9 +220,9 @@ function ExecucaoBox({ execucao }: { execucao: Execucao }) {
     <div className="mb-6 p-4 bg-gray-900 border border-gray-800 rounded-lg flex items-center gap-3">
       <span className="text-green-400 text-lg">✓</span>
       <span className="text-sm text-gray-300">Ciclo concluído</span>
-      {countdown && (
-        <span className="text-sm text-gray-500 ml-auto font-mono">Próximo em {countdown}</span>
-      )}
+      <span className="text-sm text-gray-500 ml-auto font-mono">
+        {countdown ? `Próximo em ${countdown}` : 'Próximo ciclo em breve'}
+      </span>
     </div>
   );
 }
