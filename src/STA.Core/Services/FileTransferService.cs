@@ -13,10 +13,10 @@ public record FileTransferResult(
 
 public interface IFileTransferService
 {
-    Task<FileTransferResult> TransferAsync(
+    Task<FileTransferResult> TransferFanOutAsync(
         TransferPath config,
         string sourceDirectory,
-        string destinationDirectory,
+        IReadOnlyList<string> destinationDirectories,
         bool overwriteExisting,
         int timeoutCompactacaoMs,
         int? cnLogProcesso,
@@ -51,10 +51,10 @@ public class FileTransferService : IFileTransferService
         _logger = logger;
     }
 
-    public async Task<FileTransferResult> TransferAsync(
+    public async Task<FileTransferResult> TransferFanOutAsync(
         TransferPath config,
         string sourceDirectory,
-        string destinationDirectory,
+        IReadOnlyList<string> destinationDirectories,
         bool overwriteExisting,
         int timeoutCompactacaoMs,
         int? cnLogProcesso,
@@ -66,9 +66,16 @@ public class FileTransferService : IFileTransferService
             return new FileTransferResult(0, 0, 0, [$"Diretório de origem não existe: {sourceDirectory}"]);
         }
 
-        Directory.CreateDirectory(destinationDirectory);
+        foreach (var destDir in destinationDirectories)
+        {
+            try { Directory.CreateDirectory(destDir); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Não foi possível criar diretório de destino: '{Path}'.", destDir); }
+        }
         if (!string.IsNullOrWhiteSpace(config.DiretorioBackup))
-            Directory.CreateDirectory(config.DiretorioBackup);
+        {
+            try { Directory.CreateDirectory(config.DiretorioBackup); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Não foi possível criar diretório de backup: '{Path}'.", config.DiretorioBackup); }
+        }
 
         var errors = new List<string>();
         int succeeded = 0, failed = 0;
@@ -85,7 +92,7 @@ public class FileTransferService : IFileTransferService
             {
                 _logger.LogWarning("Arquivo em uso, ignorado: '{File}'.", file.Name);
                 await GravarLogArquivoAsync(
-                    cnLogProcesso, config, file.Name, sourceDirectory, destinationDirectory,
+                    cnLogProcesso, config, file.Name, sourceDirectory, destinationDirectories.FirstOrDefault() ?? "",
                     file.Length, DateTime.UtcNow, "W", "Arquivo em uso (locked) — será tentado no próximo ciclo", false, false, cancellationToken);
                 continue;
             }
@@ -96,26 +103,63 @@ public class FileTransferService : IFileTransferService
                 continue;
             }
 
+            // Processa 1 arquivo por vez: backup + fan-out para todos os destinos + apaga origem só no final
             var dtInicioArquivo = DateTime.UtcNow;
+            bool compressed = false;
             try
             {
-                var (compressed, decompressed) = await ProcessFileAsync(
-                    file, config, sourceDirectory, destinationDirectory, overwriteExisting, timeoutCompactacaoMs, cancellationToken);
-                succeeded++;
+                var (filePath, fileName, wasCompressed) = await TryCompressAsync(file, config, sourceDirectory, timeoutCompactacaoMs, cancellationToken);
+                compressed = wasCompressed;
 
-                await GravarLogArquivoAsync(
-                    cnLogProcesso, config, file.Name, sourceDirectory, destinationDirectory,
-                    file.Length, dtInicioArquivo, "S", null, compressed, decompressed, cancellationToken);
+                // 1. Backup (se configurado)
+                CopyToBackup(filePath, fileName, config.DiretorioBackup, overwriteExisting);
+
+                // 2. Fan-out: copia para TODOS os destinos
+                bool fanOutOk = true;
+                foreach (var destDir in destinationDirectories)
+                {
+                    try
+                    {
+                        CopyToDestination(filePath, fileName, destDir, overwriteExisting);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Falha ao copiar '{File}' para '{Dest}'.", fileName, destDir);
+                        errors.Add($"{file.Name} → {destDir}: {ex.Message}");
+                        fanOutOk = false;
+                    }
+                }
+
+                // 3. Só apaga origem se fan-out foi 100% bem-sucedido
+                if (fanOutOk)
+                {
+                    CleanupSource(file.FullName, filePath);
+                }
+
+                // 4. Grava log por destino (status S se copia ok, E se falhou)
+                int destIdx = 0;
+                var destErrors = errors.Where(e => e.StartsWith($"{file.Name} →")).ToList();
+                foreach (var destDir in destinationDirectories)
+                {
+                    var errMsg = destIdx < destErrors.Count
+                        ? destErrors[destIdx].Split("→", 2)[1].Trim().TrimStart(':').Trim()
+                        : null;
+                    await GravarLogArquivoAsync(
+                        cnLogProcesso, config, fileName, sourceDirectory, destDir,
+                        file.Length, dtInicioArquivo, errMsg != null ? "E" : "S", errMsg, compressed, false, cancellationToken);
+                    destIdx++;
+                }
+                if (!fanOutOk) failed++;
+                else succeeded++;
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 failed++;
                 errors.Add($"{file.Name}: {ex.Message}");
                 _logger.LogError(ex, "Erro ao transferir '{File}'.", file.Name);
-
                 await GravarLogArquivoAsync(
-                    cnLogProcesso, config, file.Name, sourceDirectory, destinationDirectory,
-                    file.Length, dtInicioArquivo, "E", ex.Message, false, false, cancellationToken);
+                    cnLogProcesso, config, file.Name, sourceDirectory, destinationDirectories.FirstOrDefault() ?? "",
+                    file.Length, dtInicioArquivo, "E", ex.Message, compressed, false, cancellationToken);
             }
         }
 

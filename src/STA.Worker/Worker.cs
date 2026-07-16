@@ -226,22 +226,25 @@ public class Worker : BackgroundService
         {
             _estado.SetEtapa(chain.Etapa);
 
-            for (int i = 0; i < chain.Nodes.Count - 1; i++)
-            {
-                var result = await transferService.TransferAsync(
-                    chain.Nodes[i],
-                    chain.Nodes[i].DiretorioPrincipal,
-                    chain.Nodes[i + 1].DiretorioPrincipal,
-                    settings.SobreEscreverArquivos,
-                    settings.TimeoutCompactacaoMs,
-                    cnLogProcesso,
-                    stoppingToken);
+            // Estrutura da chain: nó 0 = origem (com backup opcional), nós 1+ = destinos (fan-out)
+            if (chain.Nodes.Count < 2) continue;
 
-                totals.Add(result);
-            }
+            var origem = chain.Nodes[0];
+            var destinos = chain.Nodes.Skip(1).Select(n => n.DiretorioPrincipal).ToList();
 
-            if (chain.Nodes.Count > 0)
-                purgeService.PurgeNode(chain.Nodes[^1]);
+            var result = await transferService.TransferFanOutAsync(
+                origem,
+                origem.DiretorioPrincipal,
+                destinos,
+                settings.SobreEscreverArquivos,
+                settings.TimeoutCompactacaoMs,
+                cnLogProcesso,
+                stoppingToken);
+
+            totals.Add(result);
+
+            // Limpa backups antigos (purge) baseado no primeiro nó (que tem a info de DiasExcluir)
+            purgeService.PurgeNode(origem);
         }
 
         return totals;
