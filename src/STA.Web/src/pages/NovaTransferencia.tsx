@@ -4,6 +4,7 @@ import axios from 'axios';
 import api from '../lib/api';
 import Header from '../components/layout/Header';
 import DiretorioInput from '../components/shared/DiretorioInput';
+import RenameConfig from '../components/shared/RenameConfig';
 import { useValidarDiretorio } from '../hooks/useValidarDiretorio';
 
 export default function NovaTransferencia() {
@@ -155,11 +156,9 @@ export default function NovaTransferencia() {
                         className="px-2 pt-2 text-red-400 hover:text-red-300 text-lg">×</button>
                     )}
                   </div>
-                  <input
+                  <RenameConfig
                     value={d.rename}
-                    onChange={(e) => updateDestino(i, 'rename', e.target.value)}
-                    placeholder="Renomear para: COBREM_{NAME}_ATIVOS_{DATE}.dat (opcional)"
-                    className="w-full ml-0 px-3 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded text-gray-100 text-xs font-mono focus:outline-none focus:border-green-500"
+                    onChange={(v) => updateDestino(i, 'rename', v)}
                   />
                 </div>
               ))}
@@ -168,13 +167,7 @@ export default function NovaTransferencia() {
               className="mt-3 px-3 py-1.5 text-sm text-green-400 border border-green-700 hover:bg-green-900/30 rounded">
               + Adicionar outro destino
             </button>
-            <div className="text-xs text-gray-600 mt-3 space-y-1 border-t border-gray-800 pt-3">
-              <p className="text-gray-500 font-medium">Como renomear (opcional):</p>
-              <p><code className="text-green-400">{'{NAME}'}</code> nome original sem extensão • <code className="text-green-400">{'{EXT}'}</code> extensão original</p>
-              <p><code className="text-green-400">{'{DATE}'}</code> data (20260716) • <code className="text-green-400">{'{TIME}'}</code> hora (143052)</p>
-              <p className="text-gray-700 italic">Ex: arquivo CARGA_CRC.txt com padrão COBREM_{'{NAME}'}_{'{DATE}'}.dat → COBREM_CARGA_CRC_20260716.dat</p>
-              <p className="text-gray-700 italic">Deixe vazio para manter o nome original.</p>
-            </div>
+            <p className="text-xs text-gray-600 mt-2">O arquivo será copiado para cada destino (fan-out). Marque "Renomear" se o destino precisa de nome diferente.</p>
           </div>
 
           {/* Opções */}
