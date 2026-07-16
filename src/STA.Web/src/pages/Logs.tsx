@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import type { ApiResponse, PaginatedResponse, LogArquivo } from '../types';
+import type { ApiResponse, PaginatedResponse, LogArquivo, Etapa } from '../types';
 import Header from '../components/layout/Header';
 
 function todayStr() {
@@ -15,11 +15,24 @@ export default function Logs() {
   const [status, setStatus] = useState('');
   const [arquivo, setArquivo] = useState('');
   const [data, setData] = useState(todayStr());
+  const [etapas, setEtapas] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const pageSize = 20;
 
+  useEffect(() => { fetchEtapas(); }, []);
   useEffect(() => { fetchLogs(); }, [page, status, data]);
+
+  const fetchEtapas = async () => {
+    try {
+      const { data } = await api.get<ApiResponse<PaginatedResponse<Etapa>>>('/etapas?pageSize=100');
+      if (data.success && data.data) {
+        const map: Record<number, string> = {};
+        data.data.items.forEach(e => { map[e.cnEtapa] = e.nmEtapa; });
+        setEtapas(map);
+      }
+    } catch { /* interceptor */ }
+  };
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -103,7 +116,7 @@ export default function Logs() {
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-800">
                   <th className="py-2 px-2">Arquivo</th>
-                  <th className="py-2 px-2">Origem</th>
+                  <th className="py-2 px-2">Etapa</th>
                   <th className="py-2 px-2">Destino</th>
                   <th className="py-2 px-2">Tamanho</th>
                   <th className="py-2 px-2">Status</th>
@@ -114,7 +127,7 @@ export default function Logs() {
                 {logs.map((l) => (
                   <tr key={l.cnLogArquivo} className="border-b border-gray-800/50 hover:bg-gray-900/50">
                     <td className="py-2 px-2 font-mono text-xs">{l.nmArquivo}</td>
-                    <td className="py-2 px-2 text-xs text-gray-400 truncate max-w-[180px]" title={l.dsDiretorioOrigem}>{l.dsDiretorioOrigem.split('/').pop()}</td>
+                    <td className="py-2 px-2 text-xs text-gray-300">{l.cnEtapa ? (etapas[l.cnEtapa] || `Etapa #${l.cnEtapa}`) : '-'}</td>
                     <td className="py-2 px-2 text-xs text-gray-400 truncate max-w-[180px]" title={l.dsDiretorioDestino}>{l.dsDiretorioDestino.split('/').pop()}</td>
                     <td className="py-2 px-2 text-xs">{formatBytes(l.nrTamanhoBytes)}</td>
                     <td className="py-2 px-2">
