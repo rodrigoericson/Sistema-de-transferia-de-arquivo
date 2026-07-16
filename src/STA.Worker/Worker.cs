@@ -40,6 +40,7 @@ public class Worker : BackgroundService
 
         try
         {
+            await LimparLogsOrfaosAsync(stoppingToken);
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
@@ -148,10 +149,21 @@ public class Worker : BackgroundService
 
         _estado.IniciarCiclo();
 
-        var totals = await ProcessarChainsAsync(chains, transferService, purgeService, settings, cnLogProcesso, stoppingToken);
-
-        await FecharLogCicloAsync(logRepository, settings, dtInicio, totals, cnLogProcesso, stoppingToken);
-        _estado.FinalizarCiclo(totals.FilesProcessed, DateTime.UtcNow.Add(_interval));
+        var totals = new CicloTotals(); // inicializado com default para garantir acesso no finally
+        try
+        {
+            totals = await ProcessarChainsAsync(chains, transferService, purgeService, settings, cnLogProcesso, stoppingToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "Erro durante processamento de chains.");
+        }
+        finally
+        {
+            // Garante que o log SEMPRE fecha (nunca fica órfão com status 'R')
+            await FecharLogCicloAsync(logRepository, settings, dtInicio, totals, cnLogProcesso, stoppingToken);
+            _estado.FinalizarCiclo(totals.FilesProcessed, DateTime.UtcNow.Add(_interval));
+        }
         ReportarResultado(totals);
     }
 
@@ -362,6 +374,33 @@ public class Worker : BackgroundService
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Falha ao buscar parâmetros. Mantendo último snapshot válido.");
+        }
+    }
+
+    private async Task LimparLogsOrfaosAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<STA.Core.Data.StaDbContext>();
+            var orfaos = await context.Logs
+                .Where(l => l.IdStatusProcesso == "R")
+                .ToListAsync(stoppingToken);
+
+            if (orfaos.Count > 0)
+            {
+                foreach (var log in orfaos)
+                {
+                    log.IdStatusProcesso = "W";
+                    log.DtFimProcesso = DateTime.UtcNow;
+                }
+                await context.SaveChangesAsync(stoppingToken);
+                _logger.LogWarning("Fechados {Count} log(s) de processo órfão(s) com status 'R' da sessão anterior.", orfaos.Count);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Falha ao limpar logs órfãos na inicialização.");
         }
     }
 
