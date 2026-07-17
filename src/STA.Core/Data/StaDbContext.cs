@@ -22,6 +22,7 @@ public class StaDbContext : DbContext
     public DbSet<RotaTransferencia> Rotas { get; set; } = null!;
     public DbSet<RotaDestino> RotaDestinos { get; set; } = null!;
     public DbSet<LogArquivo> LogArquivos { get; set; } = null!;
+    public DbSet<Usuario> Usuarios { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +38,7 @@ public class StaDbContext : DbContext
         ConfigureRotaTransferencia(modelBuilder.Entity<RotaTransferencia>());
         ConfigureRotaDestino(modelBuilder.Entity<RotaDestino>());
         ConfigureLogArquivo(modelBuilder.Entity<LogArquivo>());
+        ConfigureUsuario(modelBuilder.Entity<Usuario>());
     }
 
     private static void ConfigureSistema(EntityTypeBuilder<Sistema> builder)
@@ -402,5 +404,57 @@ public class StaDbContext : DbContext
         builder.HasIndex(l => l.NmArquivo);
         builder.HasIndex(l => new { l.IdStatus, l.DtInicio });
         builder.HasIndex(l => l.CnLogProcesso);
+    }
+
+    private static void ConfigureUsuario(EntityTypeBuilder<Usuario> builder)
+    {
+        builder.ToTable("tbl_usuario");
+
+        builder.HasKey(u => u.CnUsuario);
+
+        builder.Property(u => u.CnUsuario)
+            .HasColumnName("cn_usuario")
+            .ValueGeneratedOnAdd();
+
+        builder.Property(u => u.NmUsuario)
+            .HasColumnName("nm_usuario")
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(u => u.NmDisplay)
+            .HasColumnName("nm_display")
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(u => u.DsSenhaHash)
+            .HasColumnName("ds_senha_hash")
+            .HasMaxLength(500)
+            .IsRequired();
+
+        builder.Property(u => u.IdRole)
+            .HasColumnName("id_role")
+            .HasMaxLength(20)
+            .HasDefaultValue("Viewer")
+            .IsRequired();
+
+        builder.Property(u => u.FlAtivo)
+            .HasColumnName("fl_ativo")
+            .HasDefaultValue(true);
+
+        builder.Property(u => u.NrTentativasFalhas)
+            .HasColumnName("nr_tentativas_falhas")
+            .HasDefaultValue(0);
+
+        builder.Property(u => u.DtBloqueadoAte)
+            .HasColumnName("dt_bloqueado_ate");
+
+        builder.Property(u => u.DtCriacao)
+            .HasColumnName("dt_criacao")
+            .HasDefaultValueSql("NOW()");
+
+        builder.Property(u => u.DtUltimoLogin)
+            .HasColumnName("dt_ultimo_login");
+
+        builder.HasIndex(u => u.NmUsuario).IsUnique();
     }
 }

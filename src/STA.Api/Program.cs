@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using STA.Core.Data;
 using STA.Core.Data.Repositories;
+using STA.Core.Services;
 using STA.Core.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,7 @@ builder.Services.AddScoped<IParametroRepository, ParametroRepository>();
 builder.Services.AddScoped<ILogRepository, LogRepository>();
 builder.Services.AddScoped<IEtapaRepository, EtapaRepository>();
 builder.Services.AddScoped<ILogArquivoRepository, LogArquivoRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]

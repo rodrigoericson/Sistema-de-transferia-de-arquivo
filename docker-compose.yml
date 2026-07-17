@@ -16,5 +16,36 @@ services:
       timeout: 3s
       retries: 5
 
+  samba-ad:
+    image: nowsci/samba-domain
+    container_name: sta-samba-ad
+    hostname: dc1
+    domainname: sta.local
+    environment:
+      DOMAIN: STA.LOCAL
+      DOMAINPASS: S3nh@Adm!n2026
+      DNSFORWARDER: 8.8.8.8
+      HOSTIP: 172.20.0.10
+    ports:
+      - "389:389"      # LDAP
+      - "636:636"      # LDAPS
+    volumes:
+      - samba-data:/var/lib/samba
+      - samba-config:/etc/samba/external
+    networks:
+      sta-net:
+        ipv4_address: 172.20.0.10
+    privileged: true
+    restart: unless-stopped
+
 volumes:
   sta-pgdata:
+  samba-data:
+  samba-config:
+
+networks:
+  sta-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
