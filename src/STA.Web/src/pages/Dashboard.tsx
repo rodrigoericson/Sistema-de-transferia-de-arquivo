@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import type { ApiResponse, PaginatedResponse, WorkerStatus, LogArquivo, Execucao } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import Header from '../components/layout/Header';
 
 export default function Dashboard() {
@@ -10,7 +9,7 @@ export default function Dashboard() {
   const [errosRecentes, setErrosRecentes] = useState<LogArquivo[]>([]);
   const [execucao, setExecucao] = useState<Execucao | null>(null);
   const [loading, setLoading] = useState(true);
-  const role = useAuth((s) => s.role);
+  const role = sessionStorage.getItem('sta_role');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,7 +127,7 @@ export default function Dashboard() {
         )}
 
         {/* Worker Control (Admin only) */}
-        {role === 'Admin' && (
+        {(role === 'Admin') && (
           <div className="flex gap-3 mb-8">
             {status?.status === 'rodando' ? (
               <button onClick={handlePause} className="px-4 py-2 text-sm bg-yellow-600 hover:bg-yellow-700 rounded">Pausar Worker</button>

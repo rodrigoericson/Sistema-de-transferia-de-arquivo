@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import type { ApiResponse, PaginatedResponse, Etapa, Rota, Destino } from '../types';
-import { useAuth } from '../hooks/useAuth';
 import Header from '../components/layout/Header';
 
 interface EtapaCompleta extends Etapa {
@@ -12,8 +11,8 @@ interface EtapaCompleta extends Etapa {
 export default function Etapas() {
   const [etapas, setEtapas] = useState<EtapaCompleta[]>([]);
   const [loading, setLoading] = useState(true);
-  const role = useAuth((s) => s.role);
   const navigate = useNavigate();
+  const role = sessionStorage.getItem('sta_role');
   const canEdit = role === 'Admin' || role === 'Operator';
 
   useEffect(() => { fetchEtapas(); }, []);
