@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import type { ApiResponse, PaginatedResponse, Etapa, Rota, Destino } from '../types';
+import { useAuth } from '../hooks/useAuth';
 import Header from '../components/layout/Header';
 
 interface EtapaCompleta extends Etapa {
@@ -11,7 +12,9 @@ interface EtapaCompleta extends Etapa {
 export default function Etapas() {
   const [etapas, setEtapas] = useState<EtapaCompleta[]>([]);
   const [loading, setLoading] = useState(true);
+  const role = useAuth((s) => s.role);
   const navigate = useNavigate();
+  const canEdit = role === 'Admin' || role === 'Operator';
 
   useEffect(() => { fetchEtapas(); }, []);
 
@@ -65,7 +68,7 @@ export default function Etapas() {
           </div>
           <div className="flex gap-3">
             <button onClick={() => navigate('/')} className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded">Voltar</button>
-            <button onClick={() => navigate('/etapas/nova')} className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded">+ Nova Transferência</button>
+            {canEdit && <button onClick={() => navigate('/etapas/nova')} className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded">+ Nova Transferência</button>}
           </div>
         </div>
 
@@ -90,16 +93,18 @@ export default function Etapas() {
                   </div>
                   <p className="text-xs text-gray-600 mt-1">Ordem: {etapa.nrOrdemExecucao} • Criado em {new Date(etapa.dtCriacao).toLocaleDateString('pt-BR')}</p>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => navigate(`/etapas/${etapa.cnEtapa}/editar`)}
-                    className="px-2 py-1 text-xs text-blue-400 hover:bg-blue-900/30 rounded">Editar</button>
-                  <button onClick={() => handleToggle(etapa)}
-                    className={`px-2 py-1 text-xs rounded ${etapa.flAtivo ? 'text-yellow-400 hover:bg-yellow-900/30' : 'text-green-400 hover:bg-green-900/30'}`}>
-                    {etapa.flAtivo ? 'Desativar' : 'Ativar'}
-                  </button>
-                  <button onClick={() => handleDelete(etapa.cnEtapa)}
-                    className="px-2 py-1 text-xs text-red-400 hover:bg-red-900/30 rounded">Excluir</button>
-                </div>
+                {canEdit && (
+                  <div className="flex gap-2">
+                    <button onClick={() => navigate(`/etapas/${etapa.cnEtapa}/editar`)}
+                      className="px-2 py-1 text-xs text-blue-400 hover:bg-blue-900/30 rounded">Editar</button>
+                    <button onClick={() => handleToggle(etapa)}
+                      className={`px-2 py-1 text-xs rounded ${etapa.flAtivo ? 'text-yellow-400 hover:bg-yellow-900/30' : 'text-green-400 hover:bg-green-900/30'}`}>
+                      {etapa.flAtivo ? 'Desativar' : 'Ativar'}
+                    </button>
+                    <button onClick={() => handleDelete(etapa.cnEtapa)}
+                      className="px-2 py-1 text-xs text-red-400 hover:bg-red-900/30 rounded">Excluir</button>
+                  </div>
+                )}
               </div>
 
               {/* Rotas e destinos */}
