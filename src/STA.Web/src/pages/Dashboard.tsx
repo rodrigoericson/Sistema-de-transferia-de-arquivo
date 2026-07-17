@@ -9,7 +9,8 @@ export default function Dashboard() {
   const [errosRecentes, setErrosRecentes] = useState<LogArquivo[]>([]);
   const [execucao, setExecucao] = useState<Execucao | null>(null);
   const [loading, setLoading] = useState(true);
-  const role = sessionStorage.getItem('sta_role');
+  const [role, setRole] = useState<string | null>(null);
+  useEffect(() => { setRole(sessionStorage.getItem('sta_role')); }, []);
   const navigate = useNavigate();
 
   useEffect(() => {
