@@ -448,10 +448,138 @@ Adicionar URL Rewrite no IIS para SPA (todas rotas → index.html).
 | 5.3 | ✅ | Log granular por arquivo |
 | 6 | ✅ | API REST + JWT + Worker control |
 | 7 | ✅ | Frontend React (Login, Dashboard, CRUD, Logs) |
-| 8 | 📋 | Notificações (email/Teams em falhas) |
-| 9 | 📋 | Audit trail (histórico de alterações) |
-| 10 | 📋 | CI/CD pipeline + Docker |
-| 11 | 📋 | Integração AD/LDAP |
+| 8 | ✅ | Segurança: AD/LDAP + BCrypt + Roles + Rate Limiting |
+| 9 | 📋 | Notificações (email/Teams em falhas) |
+| 10 | 📋 | Audit trail (histórico de alterações) |
+| 11 | 📋 | CI/CD pipeline + Docker |
+
+---
+
+## Segurança e Autenticação
+
+### Arquitetura de Auth
+
+```
+Usuário digita credenciais
+        ↓
+API tenta LDAP primeiro (se Ldap:Enabled=true)
+        ↓
+Se AD responder → role vem do grupo AD → gera JWT
+Se AD falhar → fallback banco local (BCrypt) → gera JWT
+        ↓
+Frontend armazena JWT em sessionStorage (morre ao fechar browser)
+```
+
+### Active Directory (LDAP)
+
+**Tecnologia:** Samba AD via Docker (domínio STA.LOCAL, LDAPS porta 636)
+
+**Configuração** (`appsettings.json`):
+```json
+"Ldap": {
+  "Enabled": true,
+  "Server": "localhost",
+  "BaseDn": "DC=sta,DC=local",
+  "Domain": "STA.LOCAL"
+}
+```
+
+**Criar usuário no AD:**
+```bash
+# Criar usuário
+docker exec sta-samba-ad samba-tool user add nome.usuario SenhaForte123 --given-name=Nome --surname=Sobrenome
+
+# Adicionar ao grupo (define a role)
+docker exec sta-samba-ad samba-tool group addmembers STA-Admins nome.usuario
+```
+
+**Grupos AD → Roles:**
+| Grupo AD | Role | Permissões |
+|----------|------|------------|
+| STA-Admins | Admin | Tudo: CRUD, Worker control, gestão |
+| STA-Operators | Operator | CRUD transferências, ver logs |
+| STA-Viewers | Viewer | Apenas leitura: dashboard, logs |
+
+### Banco Local (Fallback)
+
+**Tecnologia:** BCrypt (12 rounds) via pacote `BCrypt.Net-Next`
+
+**Tabela:** `sta.tbl_usuario`
+| Campo | Tipo | Descrição |
+|-------|------|----------|
+| cn_usuario | serial PK | ID |
+| nm_usuario | varchar(100) | Login (único) |
+| nm_display | varchar(200) | Nome de exibição |
+| ds_senha_hash | varchar(500) | Hash BCrypt |
+| id_role | varchar(20) | Admin/Operator/Viewer |
+| fl_ativo | boolean | Ativo ou desativado |
+| nr_tentativas_falhas | int | Contador de erros |
+| dt_bloqueado_ate | timestamptz | Bloqueado até |
+
+**Criar usuário local (via SQL):**
+```sql
+-- Gerar hash com Node.js: node -e "const b=require('bcryptjs');console.log(b.hashSync('senha123',10))"
+INSERT INTO sta.tbl_usuario (nm_usuario, nm_display, ds_senha_hash, id_role)
+VALUES ('novo.usuario', 'Novo Usuário', '$2a$10$HASH_GERADO', 'Operator');
+```
+
+### Bloqueio de Conta
+
+- **5 tentativas erradas** consecutivas → bloqueia por **15 minutos**
+- Login correto → reseta contador
+- Administrador pode desbloquear via banco:
+```sql
+UPDATE sta.tbl_usuario SET nr_tentativas_falhas = 0, dt_bloqueado_ate = NULL WHERE nm_usuario = 'usuario';
+```
+
+### Roles no Sistema
+
+| Ação | Admin | Operator | Viewer |
+|------|:-----:|:--------:|:------:|
+| Ver Dashboard/Logs | ✅ | ✅ | ✅ |
+| Criar/Editar/Excluir transferências | ✅ | ✅ | ❌ |
+| Pausar/Retomar Worker | ✅ | ❌ | ❌ |
+| Validar/Criar diretórios | ✅ | ✅ | ❌ |
+| Gestão de usuários (futuro) | ✅ | ❌ | ❌ |
+
+**No frontend:** botões de ação ficam ocultos para roles sem permissão.
+**Na API:** endpoints retornam 403 Forbidden se role insuficiente.
+
+### Rate Limiting
+
+| Endpoint | Limite | Comportamento |
+|----------|--------|---------------|
+| POST /auth/login | 5 req/min por IP | Protege contra brute-force |
+| API geral | 100 req/min por IP | Protege contra DDoS |
+| Excedeu limite | HTTP 429 | Too Many Requests |
+
+### Security Headers
+
+Aplicados em toda response:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+
+### JWT
+
+| Propriedade | Valor |
+|-------------|-------|
+| Algoritmo | HS256 (HMAC-SHA256) |
+| Expiração | 8 horas |
+| Armazenamento | sessionStorage (morre ao fechar browser) |
+| Claims | Name, Role, Jti (unique ID) |
+| Verificação | Frontend decode payload.exp |
+
+### Trocar Senha
+
+```
+POST /api/v1/auth/trocar-senha
+Body: { "senhaAtual": "...", "novaSenha": "..." }
+```
+- Exige autenticação (token válido)
+- Valida senha atual antes de trocar
+- Nova senha mínimo 8 caracteres
 
 ---
 
