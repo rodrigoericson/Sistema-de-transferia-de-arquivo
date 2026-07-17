@@ -15,13 +15,13 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-    const success = await login(username, password);
+    const result = await login(username, password);
     setLoading(false);
 
-    if (success) {
+    if (result.success) {
       navigate('/');
     } else {
-      setError('Credenciais inválidas.');
+      setError(result.message || 'Credenciais inválidas.');
     }
   };
 

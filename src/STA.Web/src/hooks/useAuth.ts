@@ -27,7 +27,7 @@ interface AuthState {
   username: string | null;
   role: string | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
 }
 
@@ -46,11 +46,15 @@ export const useAuth = create<AuthState>((set) => ({
         sessionStorage.setItem('sta_username', user);
         sessionStorage.setItem('sta_role', role);
         set({ token, username: user, role, isAuthenticated: true });
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch {
-      return false;
+      return { success: false, message: data.message || 'Credenciais inválidas.' };
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        return { success: false, message: axiosErr.response?.data?.message || 'Credenciais inválidas.' };
+      }
+      return { success: false, message: 'Erro de conexão.' };
     }
   },
 
