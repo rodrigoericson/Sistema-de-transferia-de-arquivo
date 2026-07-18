@@ -66,7 +66,7 @@ npm run dev
 dotnet test STA.sln
 ```
 
-**Login:** `admin` / `admin123`
+**Login:** credenciais no `appsettings.Development.json` (gitignored)
 
 > **Ambientes**
 >
