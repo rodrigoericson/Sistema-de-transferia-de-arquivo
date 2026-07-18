@@ -4,7 +4,7 @@
 
 ![Status](https://img.shields.io/badge/status-ativo-3DDC84?style=flat-square)
 ![Cobertura](https://img.shields.io/badge/cobertura-79%2F79%20testes-3DDC84?style=flat-square\&logo=xunit\&logoColor=white)
-![Fase](https://img.shields.io/badge/fase-8%20%E2%9C%93%20Audit%20Trail-FF6B6B?style=flat-square)
+![Fase](https://img.shields.io/badge/n%C3%ADvel-1%20%E2%9C%93%20STA%20Local-FF6B6B?style=flat-square)
 ![Stack](https://img.shields.io/badge/stack-.NET%2010%20%2B%20React%20%2B%20Postgres-512BD4?style=flat-square\&logo=.net\&logoColor=white)
 
 </div>
@@ -138,6 +138,8 @@ DOCS.md                  # Documentação técnica completa
 
 ## 📈 Roadmap
 
+### Nível 1 — STA Local ✅
+
 * ✅ Migração para .NET 10
 * ✅ PostgreSQL + EF Core (code-first)
 * ✅ Worker Service com janela horária
@@ -148,9 +150,20 @@ DOCS.md                  # Documentação técnica completa
 * ✅ Segurança (AD/LDAP + BCrypt + Roles + Rate Limiting)
 * ✅ Rename por destino (placeholders)
 * ✅ Audit trail (quem fez o quê)
-* ⏳ SFTP como protocolo de destino
+
+### Nível 2 — STA Connect (próximo)
+
+* 🚧 CI/CD pipeline + Docker
+* ⏳ SFTP como protocolo de destino (conexões agendáveis, pool por ciclo)
+* ⏳ Logs SFTP dedicados
+* ⏳ Scheduler por conexão (horários pontuais + dias da semana)
 * ⏳ Notificações (email/Teams em falhas)
-* ⏳ CI/CD pipeline + Docker
+
+### Nível 3 — STA Exchange (futuro)
+
+* ⏳ Entrega ponta-a-ponta com handshake (ACK/NACK)
+* ⏳ Rastreio de recebimento pelo destinatário
+* ⏳ SLA e monitoramento de entregas
 
 ---
 
