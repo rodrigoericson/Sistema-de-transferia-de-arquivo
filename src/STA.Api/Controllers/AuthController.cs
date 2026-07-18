@@ -41,7 +41,7 @@ public class AuthController : ControllerBase
         var expiration = DateTime.UtcNow.AddHours(
             double.Parse(_config["Jwt:ExpirationHours"] ?? "8"));
 
-        await _audit.RegistrarAsync("AUTH", 0, "LOGIN", result.Username, ct);
+        await _audit.RegistrarAsync(result.CnUsuario, result.Username ?? "desconhecido", "AUTH", 0, "LOGIN", result.Username, ct);
 
         var response = new LoginResponse(token, expiration, result.Username!, result.Role!);
         return Ok(new ApiResponse<LoginResponse>(true, response));

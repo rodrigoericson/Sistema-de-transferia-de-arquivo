@@ -8,4 +8,13 @@ public interface IAuditService
         string idAcao,
         string? detalhe = null,
         CancellationToken ct = default);
+
+    Task RegistrarAsync(
+        int? cnUsuario,
+        string nmUsuario,
+        string idEntidade,
+        int idReferencia,
+        string idAcao,
+        string? detalhe = null,
+        CancellationToken ct = default);
 }

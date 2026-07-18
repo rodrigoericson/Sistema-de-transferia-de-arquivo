@@ -24,12 +24,31 @@ public class AuditService : IAuditService
         string? detalhe = null,
         CancellationToken ct = default)
     {
+        await RegistrarAsync(
+            _currentUser.CnUsuario,
+            _currentUser.NmUsuario ?? "sistema",
+            idEntidade,
+            idReferencia,
+            idAcao,
+            detalhe,
+            ct);
+    }
+
+    public async Task RegistrarAsync(
+        int? cnUsuario,
+        string nmUsuario,
+        string idEntidade,
+        int idReferencia,
+        string idAcao,
+        string? detalhe = null,
+        CancellationToken ct = default)
+    {
         try
         {
             var auditoria = new Auditoria
             {
-                CnUsuario = _currentUser.CnUsuario,
-                NmUsuario = _currentUser.NmUsuario ?? "sistema",
+                CnUsuario = cnUsuario,
+                NmUsuario = nmUsuario,
                 IdEntidade = idEntidade,
                 IdReferencia = idReferencia,
                 IdAcao = idAcao,
@@ -39,7 +58,7 @@ public class AuditService : IAuditService
 
             await _repository.InserirAsync(auditoria, ct);
             _logger.LogDebug("Auditoria registrada: {Entidade} {Acao} ref={IdRef} por {Usuario}",
-                idEntidade, idAcao, idReferencia, auditoria.NmUsuario);
+                idEntidade, idAcao, idReferencia, nmUsuario);
         }
         catch (Exception ex)
         {
