@@ -99,12 +99,12 @@ jobs:
             ### Instalação
             1. Baixe o arquivo `tae-sta-${{ github.ref_name }}.zip`
             2. Extraia em pasta temporária
-            3. Execute `scripts\Install-STA.ps1` como Administrador
+            3. Execute `scripts\Install-TAE-STA.ps1` como Administrador
 
             ### Atualização
             1. Baixe o arquivo `tae-sta-${{ github.ref_name }}.zip`
             2. Extraia em pasta temporária
-            3. Execute `scripts\Update-STA.ps1 -SourcePath .\`
+            3. Execute `scripts\Update-TAE-STA.ps1 -SourcePath .\`
 
             ### Requisitos
             - Windows Server 2019+ (ou Windows 10/11 Pro)

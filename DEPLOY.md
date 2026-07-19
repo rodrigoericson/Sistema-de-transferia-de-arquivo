@@ -45,7 +45,7 @@ Copy-Item src/STA.Web/dist publish/web -Recurse
 ```powershell
 # Abra PowerShell como Administrador
 cd \caminho\para\binarios
-.\scripts\Install-STA.ps1
+.\scripts\Install-TAE-STA.ps1
 ```
 
 O script vai perguntar:
@@ -79,7 +79,7 @@ Mesmo processo da instalação (GitHub Actions ou build manual).
 
 ```powershell
 # Abra PowerShell como Administrador
-.\scripts\Update-STA.ps1 -InstallPath C:\TAE-STA -SourcePath C:\deploy\publish
+.\scripts\Update-TAE-STA.ps1 -InstallPath C:\TAE-STA -SourcePath C:\deploy\publish
 ```
 
 O script automaticamente:
@@ -150,7 +150,7 @@ GRANT ALL PRIVILEGES ON DATABASE sta TO sta_user;
 
 ### Aplicar migrations
 
-As migrations são aplicadas automaticamente pelo `Install-STA.ps1`. Para aplicar manualmente:
+As migrations são aplicadas automaticamente pelo `Install-TAE-STA.ps1`. Para aplicar manualmente:
 
 ```powershell
 $env:STA_DB_CONN = "Host=localhost;Port=5432;Database=sta;Username=sta_user;Password=SENHA"
@@ -198,7 +198,7 @@ sc.exe delete TAE-STA-Worker
 
 ## IIS (API + Frontend)
 
-### Configuração manual (se não usar Install-STA.ps1)
+### Configuração manual (se não usar Install-TAE-STA.ps1)
 
 **API:**
 1. Criar Application Pool `TAE-STA-Pool` (No Managed Code)
