@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/STA.Web/package-lock.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+      - name: Frontend Build
+        run: |
+          cd src/STA.Web
+          npm ci
+          npm run build
+
+  publish:
+    needs: build-and-test
+    runs-on: windows-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/STA.Web/package-lock.json
+
+      - name: Publish API (self-contained)
+        run: dotnet publish src/STA.Api -c Release -r win-x64 --self-contained -o publish/api
+
+      - name: Publish Worker (self-contained)
+        run: dotnet publish src/STA.Worker -c Release -r win-x64 --self-contained -o publish/worker
+
+      - name: Build Frontend
+        run: |
+          cd src/STA.Web
+          npm ci
+          npm run build
+
+      - name: Copy Frontend dist
+        run: Copy-Item -Path src/STA.Web/dist -Destination publish/web -Recurse
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tae-sta-release
+          path: publish/
+          retention-days: 30
