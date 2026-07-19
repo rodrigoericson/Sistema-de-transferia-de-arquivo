@@ -1,4 +1,4 @@
-# STA — Documentação Técnica
+# TAE-STA — Documentação Técnica
 
 ## Índice
 
@@ -19,7 +19,7 @@
 
 ## Visão Geral
 
-O STA (Sistema de Transferência de Arquivos) é um serviço que automatiza a movimentação de arquivos entre servidores Windows. Originalmente escrito em VB.NET + Sybase (2019), foi reescrito do zero em .NET 10 + PostgreSQL mantendo o comportamento operacional mas com arquitetura moderna.
+O TAE-STA (Transferência de Arquivos Enterprise) é um serviço que automatiza a movimentação de arquivos entre servidores Windows. Originalmente escrito em VB.NET + Sybase (2019), foi reescrito do zero em .NET 10 + PostgreSQL mantendo o comportamento operacional mas com arquitetura moderna.
 
 **O que ele faz:**
 - Transfere arquivos entre diretórios de rede (UNC paths)

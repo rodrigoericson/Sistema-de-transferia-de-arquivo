@@ -32,9 +32,9 @@
   <rect x="8" y="8" width="984" height="904" rx="6" fill="none" stroke="#00ff88" stroke-width="1.5"/>
 
   <!-- CABEÇALHO -->
-  <text x="30" y="40" fill="#7dffb3" font-size="22" font-family="JetBrains Mono, Consolas, monospace" filter="url(#glowMain)">CENTRAL DE CONTROLE STA</text>
+  <text x="30" y="40" fill="#7dffb3" font-size="22" font-family="JetBrains Mono, Consolas, monospace" filter="url(#glowMain)">CENTRAL DE CONTROLE TAE-STA</text>
   <text x="430" y="40" fill="#7dffb3" font-size="22" font-family="JetBrains Mono, Consolas, monospace" class="cursor">_</text>
-  <text x="720" y="40" fill="#555" font-size="13" font-family="JetBrains Mono, Consolas, monospace">Sistema de Transferência de Arquivos</text>
+  <text x="720" y="40" fill="#555" font-size="13" font-family="JetBrains Mono, Consolas, monospace">Transferência de Arquivos Enterprise</text>
   <text x="940" y="40" fill="#00ff66" font-size="14" font-family="JetBrains Mono, Consolas, monospace">v7.0</text>
   <line x1="20" y1="52" x2="980" y2="52" stroke="#00ff8855"/>
 
