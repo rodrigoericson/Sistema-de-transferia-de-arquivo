@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
 
@@ -40,7 +41,7 @@ jobs:
   publish:
     needs: build-and-test
     runs-on: windows-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     steps:
       - uses: actions/checkout@v4
 
@@ -69,9 +70,43 @@ jobs:
       - name: Copy Frontend dist
         run: Copy-Item -Path src/STA.Web/dist -Destination publish/web -Recurse
 
-      - name: Upload Release Artifacts
+      - name: Copy Scripts
+        run: Copy-Item -Path scripts -Destination publish/scripts -Recurse
+
+      - name: Copy Config Template
+        run: Copy-Item -Path config -Destination publish/config -Recurse
+
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: tae-sta-release
           path: publish/
           retention-days: 30
+
+      - name: Package Release ZIP
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: Compress-Archive -Path publish/* -DestinationPath tae-sta-${{ github.ref_name }}.zip
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: tae-sta-${{ github.ref_name }}.zip
+          generate_release_notes: true
+          body: |
+            ## TAE-STA ${{ github.ref_name }}
+
+            ### Instalação
+            1. Baixe o arquivo `tae-sta-${{ github.ref_name }}.zip`
+            2. Extraia em pasta temporária
+            3. Execute `scripts\Install-STA.ps1` como Administrador
+
+            ### Atualização
+            1. Baixe o arquivo `tae-sta-${{ github.ref_name }}.zip`
+            2. Extraia em pasta temporária
+            3. Execute `scripts\Update-STA.ps1 -SourcePath .\`
+
+            ### Requisitos
+            - Windows Server 2019+ (ou Windows 10/11 Pro)
+            - PostgreSQL 15+
+            - 7-Zip instalado
