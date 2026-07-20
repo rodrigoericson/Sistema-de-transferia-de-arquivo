@@ -24,6 +24,7 @@ public class StaDbContext : DbContext
     public DbSet<LogArquivo> LogArquivos { get; set; } = null!;
     public DbSet<Usuario> Usuarios { get; set; } = null!;
     public DbSet<Auditoria> Auditorias { get; set; } = null!;
+    public DbSet<ConexaoSftp> ConexoesSftp { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +42,7 @@ public class StaDbContext : DbContext
         ConfigureLogArquivo(modelBuilder.Entity<LogArquivo>());
         ConfigureUsuario(modelBuilder.Entity<Usuario>());
         ConfigureAuditoria(modelBuilder.Entity<Auditoria>());
+        ConfigureConexaoSftp(modelBuilder.Entity<ConexaoSftp>());
     }
 
     private static void ConfigureSistema(EntityTypeBuilder<Sistema> builder)
@@ -507,5 +509,74 @@ public class StaDbContext : DbContext
         builder.HasIndex(a => a.DtAcao).IsDescending();
         builder.HasIndex(a => a.NmUsuario);
         builder.HasIndex(a => new { a.IdEntidade, a.IdAcao });
+    }
+
+    private static void ConfigureConexaoSftp(EntityTypeBuilder<ConexaoSftp> builder)
+    {
+        builder.ToTable("tbl_conexao_sftp");
+
+        builder.HasKey(c => c.CnConexaoSftp);
+
+        builder.Property(c => c.CnConexaoSftp)
+            .HasColumnName("cn_conexao_sftp")
+            .ValueGeneratedOnAdd();
+
+        builder.Property(c => c.NmConexao)
+            .HasColumnName("nm_conexao")
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(c => c.DsHost)
+            .HasColumnName("ds_host")
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(c => c.NrPorta)
+            .HasColumnName("nr_porta")
+            .HasDefaultValue(22);
+
+        builder.Property(c => c.DsUsuario)
+            .HasColumnName("ds_usuario")
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(c => c.DsSenhaCriptografada)
+            .HasColumnName("ds_senha_criptografada")
+            .HasColumnType("bytea");
+
+        builder.Property(c => c.DsCaminhoChavePrivada)
+            .HasColumnName("ds_caminho_chave_privada")
+            .HasMaxLength(500);
+
+        builder.Property(c => c.DsHorariosExecucao)
+            .HasColumnName("ds_horarios_execucao")
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(c => c.DsDiasSemana)
+            .HasColumnName("ds_dias_semana")
+            .HasMaxLength(30)
+            .HasDefaultValue("seg,ter,qua,qui,sex");
+
+        builder.Property(c => c.FlArquivoObrigatorio)
+            .HasColumnName("fl_arquivo_obrigatorio")
+            .HasDefaultValue(false);
+
+        builder.Property(c => c.NrToleranciaMinutos)
+            .HasColumnName("nr_tolerancia_minutos")
+            .HasDefaultValue(10);
+
+        builder.Property(c => c.FlAtivo)
+            .HasColumnName("fl_ativo")
+            .HasDefaultValue(true);
+
+        builder.Property(c => c.DtCriacao)
+            .HasColumnName("dt_criacao")
+            .HasDefaultValueSql("NOW()");
+
+        builder.Property(c => c.DtUltimoUso)
+            .HasColumnName("dt_ultimo_uso");
+
+        builder.HasIndex(c => c.NmConexao).IsUnique();
     }
 }
