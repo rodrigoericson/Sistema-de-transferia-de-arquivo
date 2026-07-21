@@ -137,19 +137,19 @@ export default function Dashboard() {
         )}
 
         {/* Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {sessionStorage.getItem('sta_role') !== 'Viewer' && (
             <NavCard title="Nova Transferência" description="Criar nova cadeia de transferência" onClick={() => navigate('/etapas/nova')} accent />
           )}
-          <NavCard title="Transferências" description="Ver etapas, rotas e destinos" onClick={() => navigate('/etapas')} />
-          <NavCard title="Logs" description="Ver registros de transferência de hoje" onClick={() => navigate('/logs')} />
           {sessionStorage.getItem('sta_role') !== 'Viewer' && (
-            <NavCard title="Conexões SFTP" description="Gerenciar conexões SFTP externas" onClick={() => navigate('/conexoes-sftp')} />
+            <NavCard title="Conexões SFTP" description="Gerenciar conexões SFTP externas" onClick={() => navigate('/conexoes-sftp')} sftp />
           )}
-          <NavCard title="Logs SFTP" description="Registros de transferência SFTP" onClick={() => navigate('/logs-sftp')} />
+          <NavCard title="Logs" description="Ver registros de transferência de hoje" onClick={() => navigate('/logs')} />
+          <NavCard title="Transferências" description="Ver etapas, rotas e destinos" onClick={() => navigate('/etapas')} />
           {sessionStorage.getItem('sta_role') === 'Admin' && (
             <NavCard title="Auditoria" description="Ver histórico de ações no sistema" onClick={() => navigate('/auditoria')} />
           )}
+          <NavCard title="Logs SFTP" description="Registros de transferência SFTP" onClick={() => navigate('/logs-sftp')} />
         </div>
 
         {/* Última atualização */}
@@ -175,15 +175,17 @@ function StatCard({ label, value, color }: { label: string; value: string; color
   );
 }
 
-function NavCard({ title, description, onClick, accent }: { title: string; description: string; onClick: () => void; accent?: boolean }) {
+function NavCard({ title, description, onClick, accent, sftp }: { title: string; description: string; onClick: () => void; accent?: boolean; sftp?: boolean }) {
   return (
     <button onClick={onClick}
       className={`text-left p-5 rounded-lg border transition-colors ${
         accent
           ? 'bg-green-900/20 border-green-700 hover:bg-green-900/40'
+          : sftp
+          ? 'bg-blue-900/20 border-blue-700 hover:bg-blue-900/40'
           : 'bg-gray-900 border-gray-800 hover:border-gray-700 hover:bg-gray-800/50'
       }`}>
-      <h3 className={`font-medium mb-1 ${accent ? 'text-green-400' : 'text-gray-100'}`}>{title}</h3>
+      <h3 className={`font-medium mb-1 ${accent ? 'text-green-400' : sftp ? 'text-blue-400' : 'text-gray-100'}`}>{title}</h3>
       <p className="text-sm text-gray-500">{description}</p>
     </button>
   );
