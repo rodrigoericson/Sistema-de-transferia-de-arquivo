@@ -86,6 +86,12 @@ public class ConexoesSftpController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResponse<ConexaoSftpDto>>> Create([FromBody] CreateConexaoSftpDto dto, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(dto.DsSenhaPlaintext) && string.IsNullOrWhiteSpace(dto.DsCaminhoChavePrivada))
+            return BadRequest(new ApiResponse<ConexaoSftpDto>(false, null, "Informe a senha ou o caminho da chave privada."));
+
+        if (!ValidarHorarios(dto.DsHorariosExecucao, out var erroHorario))
+            return BadRequest(new ApiResponse<ConexaoSftpDto>(false, null, erroHorario));
+
         var conexao = new ConexaoSftp
         {
             NmConexao = dto.NmConexao,
@@ -122,6 +128,9 @@ public class ConexoesSftpController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ApiResponse<ConexaoSftpDto>>> Update(int id, [FromBody] UpdateConexaoSftpDto dto, CancellationToken ct = default)
     {
+        if (!ValidarHorarios(dto.DsHorariosExecucao, out var erroHorario))
+            return BadRequest(new ApiResponse<ConexaoSftpDto>(false, null, erroHorario));
+
         var conexao = await _context.ConexoesSftp.FindAsync([id], ct);
         if (conexao is null)
             return NotFound(new ApiResponse<ConexaoSftpDto>(false, null, "Conexão SFTP não encontrada."));
@@ -210,5 +219,34 @@ public class ConexoesSftpController : ControllerBase
             return Ok(new ApiResponse<TestarConexaoResultDto>(true,
                 new TestarConexaoResultDto(false, $"Falha: {ex.Message}")));
         }
+    }
+
+    private static bool ValidarHorarios(string dsHorarios, out string erro)
+    {
+        erro = string.Empty;
+        if (string.IsNullOrWhiteSpace(dsHorarios))
+        {
+            erro = "Informe pelo menos um horário de execução.";
+            return false;
+        }
+
+        var horarios = dsHorarios.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var unicos = new HashSet<string>();
+
+        foreach (var h in horarios)
+        {
+            if (!TimeSpan.TryParse(h, out _))
+            {
+                erro = $"Horário inválido: '{h}'. Use formato HH:mm (ex: 08:00, 14:30).";
+                return false;
+            }
+            if (!unicos.Add(h))
+            {
+                erro = $"Horário duplicado: '{h}'.";
+                return false;
+            }
+        }
+
+        return true;
     }
 }
