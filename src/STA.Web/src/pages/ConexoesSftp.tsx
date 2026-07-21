@@ -35,6 +35,23 @@ export default function ConexoesSftpPage() {
     }
   };
 
+  const handleToggleAtivo = async (c: ConexaoSftp) => {
+    try {
+      await api.put(`/conexoes-sftp/${c.cnConexaoSftp}`, {
+        nmConexao: c.nmConexao,
+        dsHost: c.dsHost,
+        nrPorta: c.nrPorta,
+        dsUsuario: c.dsUsuario,
+        dsHorariosExecucao: c.dsHorariosExecucao,
+        dsDiasSemana: c.dsDiasSemana,
+        flArquivoObrigatorio: c.flArquivoObrigatorio,
+        nrToleranciaMinutos: c.nrToleranciaMinutos,
+        flAtivo: !c.flAtivo,
+      });
+      fetchConexoes();
+    } catch { alert('Erro ao alterar status.'); }
+  };
+
   const handleTestar = async (c: ConexaoSftp) => {
     try {
       const { data } = await api.post<ApiResponse<{ sucesso: boolean; mensagem: string }>>('/conexoes-sftp/testar', {
@@ -105,10 +122,14 @@ export default function ConexoesSftpPage() {
                     {c.flPossuiSenha && <p className="text-xs text-gray-600 mt-1">🔒 Senha configurada</p>}
                     {c.dsCaminhoChavePrivada && <p className="text-xs text-gray-600 mt-1">🔑 Chave: {c.dsCaminhoChavePrivada}</p>}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <button onClick={() => handleTestar(c)} className="px-2 py-1 text-xs bg-blue-900 text-blue-300 hover:bg-blue-800 rounded">↻ Testar</button>
                     <button onClick={() => { setEditing(c); setShowForm(true); }} className="px-2 py-1 text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 rounded">Editar</button>
                     <button onClick={() => handleDelete(c.cnConexaoSftp, c.nmConexao)} className="px-2 py-1 text-xs bg-red-900 text-red-300 hover:bg-red-800 rounded">Excluir</button>
+                    <button onClick={() => handleToggleAtivo(c)}
+                      className={`px-2 py-1 text-xs rounded ${c.flAtivo ? 'bg-yellow-900 text-yellow-300 hover:bg-yellow-800' : 'bg-green-900 text-green-300 hover:bg-green-800'}`}>
+                      {c.flAtivo ? 'Desativar' : 'Ativar'}
+                    </button>
                   </div>
                 </div>
               </div>

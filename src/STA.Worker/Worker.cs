@@ -130,7 +130,8 @@ public class Worker : BackgroundService
         using var sftpPool = new STA.Core.Services.Transports.SftpConnectionPool(
             scope.ServiceProvider.GetRequiredService<STA.Core.Services.Transports.ISftpClientFactory>(),
             scope.ServiceProvider.GetRequiredService<STA.Core.Services.Transports.ICredencialProtector>(),
-            scope.ServiceProvider.GetRequiredService<ILogger<STA.Core.Services.Transports.SftpConnectionPool>>());
+            scope.ServiceProvider.GetRequiredService<ILogger<STA.Core.Services.Transports.SftpConnectionPool>>(),
+            scope.ServiceProvider.GetRequiredService<STA.Core.Data.Repositories.ILogSftpRepository>());
         if (transferService is STA.Core.Services.FileTransferService fts)
             fts.SetSftpPool(sftpPool);
         var logRepository = scope.ServiceProvider.GetRequiredService<ILogRepository>();
