@@ -127,6 +127,14 @@ public class Worker : BackgroundService
         var pathLoader = scope.ServiceProvider.GetRequiredService<IPathConfigLoader>();
         var transferService = scope.ServiceProvider.GetRequiredService<IFileTransferService>();
         var purgeService = scope.ServiceProvider.GetRequiredService<IFilePurgeService>();
+
+        // Pool SFTP: abre conexões no início do ciclo, fecha no fim
+        using var sftpPool = new STA.Core.Services.Transports.SftpConnectionPool(
+            scope.ServiceProvider.GetRequiredService<STA.Core.Services.Transports.ISftpClientFactory>(),
+            scope.ServiceProvider.GetRequiredService<STA.Core.Services.Transports.ICredencialProtector>(),
+            scope.ServiceProvider.GetRequiredService<ILogger<STA.Core.Services.Transports.SftpConnectionPool>>());
+        if (transferService is STA.Core.Services.FileTransferService fts)
+            fts.SetSftpPool(sftpPool);
         var logRepository = scope.ServiceProvider.GetRequiredService<ILogRepository>();
 
         var chains = await CarregarChainsAsync(etapaProvider, pathLoader, settings, logRepository, stoppingToken);

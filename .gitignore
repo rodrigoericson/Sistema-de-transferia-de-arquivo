@@ -38,6 +38,7 @@ appsettings.*.local.json
 appsettings.Development.json
 appsettings.Production.json
 *.env
+**/Properties/launchSettings.json
 
 ## Test data (local)
 test-data/
