@@ -170,29 +170,6 @@ public class FileTransferService : IFileTransferService
         return new FileTransferResult(files.Length, succeeded, failed, errors);
     }
 
-
-    private async Task<(bool Compressed, bool Decompressed)> ProcessFileAsync(
-        FileInfo file,
-        TransferPath config,
-        string sourceDirectory,
-        string destinationDirectory,
-        bool overwriteExisting,
-        int timeoutMs,
-        CancellationToken cancellationToken)
-    {
-        var (filePath, fileName, compressed) = await TryCompressAsync(file, config, sourceDirectory, timeoutMs, cancellationToken);
-
-        CopyToDestination(filePath, fileName, destinationDirectory, overwriteExisting);
-        CopyToBackup(filePath, fileName, config.DiretorioBackup, overwriteExisting);
-
-        var decompressed = await TryDecompressAtDestinationAsync(
-            Path.Combine(destinationDirectory, fileName), destinationDirectory, config, timeoutMs, cancellationToken);
-
-        CleanupSource(file.FullName, filePath);
-
-        return (compressed, decompressed);
-    }
-
     private async Task<(string FilePath, string FileName, bool Compressed)> TryCompressAsync(
         FileInfo file,
         TransferPath config,
