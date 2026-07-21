@@ -31,6 +31,7 @@ Desktop.ini
 
 ## Claude Code (local)
 .claude/
+CLAUDE.md
 
 ## User secrets / env
 appsettings.*.local.json
