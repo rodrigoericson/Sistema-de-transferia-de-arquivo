@@ -350,6 +350,11 @@ Gera pasta `dist/` (SPA estática) para deploy em IIS ou Nginx.
 | `tbl_rota_destino` | Destinos por rota (fan-out) |
 | `tbl_log_processo` | Log por ciclo de execução |
 | `tbl_log_arquivo` | Log granular por arquivo transferido |
+| `tbl_usuario` | Usuários do sistema (login local/LDAP) |
+| `tbl_auditoria` | Audit trail (quem fez o quê) |
+| `tbl_conexao_sftp` | Conexões SFTP configuradas (host, credenciais, scheduler) |
+| `tbl_log_sftp` | Log dedicado de operações SFTP |
+| `tbl_execucao_sftp` | Estado de execução por horário/dia SFTP |
 
 ### Aplicar migrations
 

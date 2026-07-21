@@ -53,11 +53,11 @@
 
     <circle cx="45" cy="157" r="5" fill="#00ff66"/>
     <text x="60" y="162" fill="#00ff66">MOTOR DE TRANSFERÊNCIA</text>
-    <text x="300" y="162" fill="#00ff66" font-size="12">79 TESTES OK</text>
+    <text x="300" y="162" fill="#00ff66" font-size="12">108 TESTES OK</text>
 
     <circle cx="45" cy="187" r="5" fill="#00ff66"/>
     <text x="60" y="192" fill="#00ff66">API REST (ASP.NET Core)</text>
-    <text x="300" y="192" fill="#00ff66" font-size="12">28 ENDPOINTS</text>
+    <text x="300" y="192" fill="#00ff66" font-size="12">36 ENDPOINTS</text>
 
     <circle cx="45" cy="217" r="5" fill="#00ff66"/>
     <text x="60" y="222" fill="#00ff66">FRONTEND REACT</text>
@@ -76,7 +76,7 @@
     <text x="540" y="102" fill="#7dffb3">TESTES</text>
     <rect x="660" y="89" width="220" height="11" rx="2" fill="#1a1a1a"/>
     <rect x="660" y="89" width="220" height="11" rx="2" fill="#00ff66"/>
-    <text x="900" y="102" fill="#55ff55" font-size="13">79/79</text>
+    <text x="900" y="102" fill="#55ff55" font-size="13">108/108</text>
 
     <text x="540" y="132" fill="#7dffb3">FASES</text>
     <rect x="660" y="119" width="220" height="11" rx="2" fill="#1a1a1a"/>
@@ -130,7 +130,7 @@
 
   <rect x="730" y="345" width="240" height="170" rx="4" fill="#0d1a1a" stroke="#00bcd4" stroke-width="1"/>
   <text x="750" y="368" fill="#00bcd4" font-size="13" font-family="JetBrains Mono, Consolas, monospace">■ POSTGRESQL 15</text>
-  <text x="750" y="388" fill="#66ddee" font-size="11" font-family="JetBrains Mono, Consolas, monospace">Schema: sta (9 tabelas)</text>
+  <text x="750" y="388" fill="#66ddee" font-size="11" font-family="JetBrains Mono, Consolas, monospace">Schema: sta (12 tabelas)</text>
   <text x="750" y="410" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_sistema</text>
   <text x="750" y="427" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_parametro_sistema</text>
   <text x="750" y="444" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_etapa_transferencia</text>
@@ -139,7 +139,10 @@
   <text x="750" y="495" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_log_processo</text>
   <text x="750" y="512" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_log_arquivo</text>
   <text x="750" y="529" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_usuario</text>
-  <text x="750" y="546" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">└─ tbl_auditoria</text>
+  <text x="750" y="546" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_auditoria</text>
+  <text x="750" y="563" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_conexao_sftp</text>
+  <text x="750" y="580" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">├─ tbl_log_sftp</text>
+  <text x="750" y="597" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">└─ tbl_execucao_sftp</text>
 
   <rect x="730" y="530" width="240" height="42" rx="4" fill="#0d1a0d" stroke="#00ff66" stroke-width="1"/>
   <text x="750" y="555" fill="#00ff66" font-size="13" font-family="JetBrains Mono, Consolas, monospace">■ STA.WEB (React)</text>
@@ -158,8 +161,8 @@
   <text x="30" y="615" fill="#555" font-size="11" font-family="JetBrains Mono, Consolas, monospace">ROADMAP DA MISSÃO</text>
 
   <rect x="30" y="628" width="940" height="6" rx="3" fill="#1a1a1a"/>
-  <rect x="30" y="628" width="846" height="6" rx="3" fill="#00ff66"/>
-  <text x="930" y="624" fill="#555" font-size="10" font-family="JetBrains Mono, Consolas, monospace">90%</text>
+  <rect x="30" y="628" width="893" height="6" rx="3" fill="#00ff66"/>
+  <text x="930" y="624" fill="#555" font-size="10" font-family="JetBrains Mono, Consolas, monospace">95%</text>
 
   <line x1="60" y1="650" x2="60" y2="900" stroke="#00ff8822" stroke-width="2"/>
 
@@ -190,8 +193,8 @@
     <text x="80" y="849" fill="#444" font-size="11">Auditoria + Segurança + CI/CD + Deploy padronizado</text>
 
     <circle cx="60" cy="880" r="6" fill="none" stroke="#444" stroke-width="1.5"/>
-    <text x="80" y="877" fill="#666" font-size="14">FASE 9</text>
-    <text x="240" y="877" fill="#444" font-size="11">NA FILA</text>
+    <text x="80" y="877" fill="#66ddee" font-size="14">FASE 9</text>
+    <text x="240" y="877" fill="#66ddee" font-size="11">EM PROGRESSO</text>
     <text x="80" y="894" fill="#333" font-size="11">Próximo: SFTP + Notificações</text>
   </g>
 
