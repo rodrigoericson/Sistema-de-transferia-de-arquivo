@@ -220,7 +220,7 @@ public class ConexoesSftpController : ControllerBase
         catch (Exception ex)
         {
             return Ok(new ApiResponse<TestarConexaoResultDto>(true,
-                new TestarConexaoResultDto(false, $"Falha: {ex.Message}")));
+                new TestarConexaoResultDto(false, ex.Message)));
         }
     }
 
@@ -276,7 +276,7 @@ public class ConexoesSftpController : ControllerBase
             }, ct); } catch { }
 
             return Ok(new ApiResponse<TestarConexaoResultDto>(true,
-                new TestarConexaoResultDto(false, $"Falha: {ex.Message}")));
+                new TestarConexaoResultDto(false, ex.Message)));
         }
     }
 

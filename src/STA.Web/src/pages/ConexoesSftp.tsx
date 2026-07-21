@@ -55,8 +55,8 @@ export default function ConexoesSftpPage() {
   const handleTestar = async (c: ConexaoSftp) => {
     try {
       const { data } = await api.post<ApiResponse<{ sucesso: boolean; mensagem: string }>>(`/conexoes-sftp/${c.cnConexaoSftp}/testar`);
-      if (data.data?.sucesso) alert(`Conexão OK: ${data.data.mensagem}`);
-      else alert(`Falha: ${data.data?.mensagem}`);
+      if (data.data?.sucesso) alert(`✅ ${data.data.mensagem}`);
+      else alert(`❌ ${data.data?.mensagem}`);
     } catch { alert('Erro ao testar conexão.'); }
   };
 
