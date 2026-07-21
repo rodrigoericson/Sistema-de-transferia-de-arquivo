@@ -76,13 +76,11 @@ public class Worker : BackgroundService
     {
         if (await IsWorkerPausedAsync(stoppingToken))
         {
-            _estado.Pausado = true;
-            _estado.Executando = false;
-            _estado.ProximoCicloEm = DateTime.UtcNow.Add(_interval);
+            _estado.SetPausado(true, DateTime.UtcNow.Add(_interval));
             _logger.LogDebug("Worker pausado via banco. Ciclo ignorado.");
             return;
         }
-        _estado.Pausado = false;
+        _estado.SetPausado(false);
 
         await AtualizarParametrosAsync(stoppingToken);
 

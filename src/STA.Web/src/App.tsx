@@ -9,6 +9,7 @@ import Logs from './pages/Logs';
 import NovaTransferencia from './pages/NovaTransferencia';
 import EditarTransferencia from './pages/EditarTransferencia';
 import Auditoria from './pages/Auditoria';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuth((s) => s.isAuthenticated);
@@ -18,6 +19,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -32,5 +34,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }

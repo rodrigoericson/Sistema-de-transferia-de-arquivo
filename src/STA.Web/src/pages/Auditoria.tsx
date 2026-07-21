@@ -55,7 +55,14 @@ export default function AuditoriaPage() {
     setLoading(false);
   };
 
-  const handleSearch = () => { setPage(1); fetchAuditoria(); };
+  const handleSearch = () => {
+    if (de && ate && new Date(de) > new Date(ate)) {
+      alert('Data "De" não pode ser maior que "Até".');
+      return;
+    }
+    setPage(1);
+    fetchAuditoria();
+  };
   const pageCount = Math.ceil(total / pageSize) || 1;
 
   return (
