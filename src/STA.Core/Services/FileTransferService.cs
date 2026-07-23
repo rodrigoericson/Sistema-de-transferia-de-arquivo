@@ -92,6 +92,12 @@ public class FileTransferService : IFileTransferService
             catch (Exception ex) { _logger.LogWarning(ex, "Não foi possível criar diretório de backup: '{Path}'.", config.DiretorioBackup); }
         }
 
+        if (destinos.Count == 0)
+        {
+            _logger.LogWarning("Rota sem destinos ativos. Nenhum arquivo será processado (origem preservada).");
+            return new FileTransferResult(0, 0, 0, ["Rota sem destinos ativos."]);
+        }
+
         var errors = new List<string>();
         int succeeded = 0, failed = 0;
         var files = new DirectoryInfo(sourceDirectory).GetFiles();
@@ -132,6 +138,7 @@ public class FileTransferService : IFileTransferService
                 // 2. Fan-out: copia para TODOS os destinos, rastreia resultado por destino
                 bool fanOutOk = true;
                 var destResults = new List<(string Dir, bool Ok, string? Erro)>();
+                var resolvedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var dest in destinos)
                 {
@@ -143,10 +150,17 @@ public class FileTransferService : IFileTransferService
                             _logger.LogWarning("Rename pattern gerou nome inseguro: '{Name}'. Usando nome original.", destFileName);
                             destFileName = fileName;
                         }
-                        var remotePath = Path.Combine(dest.Diretorio, destFileName);
-
+                        var destKey = $"{dest.Diretorio}|{destFileName}";
+                        if (!resolvedNames.Add(destKey))
+                        {
+                            _logger.LogWarning("Colisão de nome no destino: '{Dir}/{Name}'. Arquivo ignorado para este destino.", dest.Diretorio, destFileName);
+                            destResults.Add((dest.Diretorio, false, $"Colisão de rename: {destFileName}"));
+                            fanOutOk = false;
+                            continue;
+                        }
                         if (dest.Destino != null && dest.Destino.IdProtocolo == "SFTP")
                         {
+                            var remotePath = CombinePosixPath(dest.Diretorio, destFileName);
                             var transport = _transportFactory.Criar(dest.Destino, dest.Conexao, _sftpPool);
                             var sw = Stopwatch.StartNew();
                             await transport.UploadFileAsync(filePath, remotePath, overwriteExisting, cancellationToken);
@@ -286,6 +300,12 @@ public class FileTransferService : IFileTransferService
 
         if (File.Exists(originalPath))
             File.Delete(originalPath);
+    }
+
+    private static string CombinePosixPath(string directory, string fileName)
+    {
+        var dir = directory.TrimEnd('/');
+        return $"{dir}/{fileName}";
     }
 
     private static string AplicarRename(string originalFileName, string? padrao)

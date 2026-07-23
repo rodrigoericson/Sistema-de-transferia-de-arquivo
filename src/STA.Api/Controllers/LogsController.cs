@@ -28,6 +28,7 @@ public class LogsController : ControllerBase
         [FromQuery] DateTime? ate = null,
         CancellationToken ct = default)
     {
+        (page, pageSize) = Common.PaginationHelper.Normalize(page, pageSize);
         var query = _context.Logs.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrEmpty(status))
@@ -95,6 +96,7 @@ public class LogsController : ControllerBase
         [FromQuery] DateTime? ate = null,
         CancellationToken ct = default)
     {
+        (page, pageSize) = Common.PaginationHelper.Normalize(page, pageSize);
         var query = _context.LogArquivos.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrEmpty(status))

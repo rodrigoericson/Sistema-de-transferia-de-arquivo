@@ -31,6 +31,7 @@ public class RotasController : ControllerBase
         [FromQuery] bool? ativo = null,
         CancellationToken ct = default)
     {
+        (page, pageSize) = Common.PaginationHelper.Normalize(page, pageSize);
         var query = _context.Rotas.AsNoTracking().AsQueryable();
 
         if (etapaId.HasValue)

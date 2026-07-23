@@ -30,6 +30,7 @@ public class AuditoriaController : ControllerBase
         [FromQuery] DateTime? ate = null,
         CancellationToken ct = default)
     {
+        (page, pageSize) = Common.PaginationHelper.Normalize(page, pageSize);
         var (items, total) = await _repository.ListarAsync(usuario, entidade, acao, de, ate, page, pageSize, ct);
 
         var dtos = items.Select(a => new AuditoriaDto(

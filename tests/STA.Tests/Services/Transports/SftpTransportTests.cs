@@ -24,11 +24,13 @@ public class SftpTransportTests
         await File.WriteAllTextAsync(tempFile, "conteudo");
 
         _clientMock.Setup(c => c.Exists("/remote/file.txt")).Returns(false);
+        _clientMock.Setup(c => c.Exists(It.Is<string>(s => s.Contains(".tmp")))).Returns(false);
+        _clientMock.Setup(c => c.Exists(It.Is<string>(s => s.Contains(".bak")))).Returns(false);
 
         await _transport.UploadFileAsync(tempFile, "/remote/file.txt", false);
 
-        _clientMock.Verify(c => c.UploadFile(It.IsAny<Stream>(), "/remote/file.txt.tmp"), Times.Once);
-        _clientMock.Verify(c => c.RenameFile("/remote/file.txt.tmp", "/remote/file.txt"), Times.Once);
+        _clientMock.Verify(c => c.UploadFile(It.IsAny<Stream>(), It.Is<string>(s => s.StartsWith("/remote/file.txt.") && s.EndsWith(".tmp"))), Times.Once);
+        _clientMock.Verify(c => c.RenameFile(It.Is<string>(s => s.EndsWith(".tmp")), "/remote/file.txt"), Times.Once);
 
         File.Delete(tempFile);
     }
@@ -40,15 +42,22 @@ public class SftpTransportTests
         await File.WriteAllTextAsync(tempFile, "novo");
 
         _clientMock.Setup(c => c.Exists("/remote/file.txt")).Returns(true);
-        _clientMock.SetupSequence(c => c.Exists("/remote/file.txt.bak"))
-            .Returns(false)
-            .Returns(true);
+        _clientMock.Setup(c => c.Exists(It.Is<string>(s => s.Contains(".bak")))).Returns(false);
+
+        string? capturedTmp = null;
+        string? capturedBak = null;
+        _clientMock.Setup(c => c.RenameFile("/remote/file.txt", It.Is<string>(s => s.EndsWith(".bak"))))
+            .Callback<string, string>((_, bak) => { capturedBak = bak; _clientMock.Setup(c => c.Exists(bak)).Returns(true); });
+        _clientMock.Setup(c => c.RenameFile(It.Is<string>(s => s.EndsWith(".tmp")), "/remote/file.txt"))
+            .Callback<string, string>((tmp, _) => capturedTmp = tmp);
 
         await _transport.UploadFileAsync(tempFile, "/remote/file.txt", true);
 
-        _clientMock.Verify(c => c.RenameFile("/remote/file.txt", "/remote/file.txt.bak"), Times.Once);
-        _clientMock.Verify(c => c.RenameFile("/remote/file.txt.tmp", "/remote/file.txt"), Times.Once);
-        _clientMock.Verify(c => c.DeleteFile("/remote/file.txt.bak"), Times.Once);
+        Assert.NotNull(capturedTmp);
+        Assert.NotNull(capturedBak);
+        _clientMock.Verify(c => c.RenameFile("/remote/file.txt", It.Is<string>(s => s.EndsWith(".bak"))), Times.Once);
+        _clientMock.Verify(c => c.RenameFile(It.Is<string>(s => s.EndsWith(".tmp")), "/remote/file.txt"), Times.Once);
+        _clientMock.Verify(c => c.DeleteFile(It.Is<string>(s => s.EndsWith(".bak"))), Times.Once);
 
         File.Delete(tempFile);
     }
@@ -61,12 +70,13 @@ public class SftpTransportTests
 
         _clientMock.Setup(c => c.UploadFile(It.IsAny<Stream>(), It.IsAny<string>()))
             .Throws(new Exception("conexao perdida"));
-        _clientMock.Setup(c => c.Exists("/remote/file.txt.tmp")).Returns(true);
+        _clientMock.Setup(c => c.Exists(It.Is<string>(s => s.EndsWith(".tmp")))).Returns(true);
+        _clientMock.Setup(c => c.Exists(It.Is<string>(s => s.EndsWith(".bak")))).Returns(false);
 
         await Assert.ThrowsAsync<Exception>(() =>
             _transport.UploadFileAsync(tempFile, "/remote/file.txt", false));
 
-        _clientMock.Verify(c => c.DeleteFile("/remote/file.txt.tmp"), Times.Once);
+        _clientMock.Verify(c => c.DeleteFile(It.Is<string>(s => s.EndsWith(".tmp"))), Times.Once);
 
         File.Delete(tempFile);
     }

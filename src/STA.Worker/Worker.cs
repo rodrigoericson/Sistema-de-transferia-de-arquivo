@@ -167,9 +167,14 @@ public class Worker : BackgroundService
         }
         finally
         {
-            await FecharLogCicloAsync(logRepository, settings, dtInicio, totals, cnLogProcesso, stoppingToken);
+            try { await FecharLogCicloAsync(logRepository, settings, dtInicio, totals, cnLogProcesso, stoppingToken); }
+            catch (Exception ex) when (ex is not OperationCanceledException) { _logger.LogWarning(ex, "Falha ao fechar log de ciclo (DB indisponível?)."); }
+
             _estado.FinalizarCiclo(totals.FilesProcessed, DateTime.UtcNow.Add(_interval));
-            await sftpPool.FlushLogsAsync(stoppingToken);
+
+            try { await sftpPool.FlushLogsAsync(stoppingToken); }
+            catch (Exception ex) when (ex is not OperationCanceledException) { _logger.LogWarning(ex, "Falha ao gravar logs SFTP do ciclo."); }
+
             sftpPool.Dispose();
         }
         ReportarResultado(totals);

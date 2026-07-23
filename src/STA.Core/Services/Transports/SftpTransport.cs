@@ -18,8 +18,9 @@ public class SftpTransport : IDestinationTransport
     {
         EnsureConnected();
 
-        var tmpPath = remotePath + ".tmp";
-        var backupPath = remotePath + ".bak";
+        var uploadId = Guid.NewGuid().ToString("N")[..8];
+        var tmpPath = $"{remotePath}.{uploadId}.tmp";
+        var backupPath = $"{remotePath}.{uploadId}.bak";
 
         try
         {

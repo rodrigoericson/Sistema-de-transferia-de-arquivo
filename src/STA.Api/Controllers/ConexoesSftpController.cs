@@ -44,6 +44,7 @@ public class ConexoesSftpController : ControllerBase
         [FromQuery] bool? ativo = null,
         CancellationToken ct = default)
     {
+        (page, pageSize) = Common.PaginationHelper.Normalize(page, pageSize);
         var query = _context.ConexoesSftp.AsNoTracking().AsQueryable();
 
         if (ativo.HasValue)

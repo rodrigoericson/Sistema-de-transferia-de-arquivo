@@ -30,6 +30,7 @@ public class LogsSftpController : ControllerBase
         [FromQuery] DateTime? ate = null,
         CancellationToken ct = default)
     {
+        (page, pageSize) = Common.PaginationHelper.Normalize(page, pageSize);
         var query = _context.LogsSftp.AsNoTracking().AsQueryable();
 
         if (conexaoId.HasValue)

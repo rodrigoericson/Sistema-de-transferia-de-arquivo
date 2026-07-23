@@ -31,6 +31,7 @@ public class EtapasController : ControllerBase
         [FromQuery] bool? ativo = null,
         CancellationToken ct = default)
     {
+        (page, pageSize) = Common.PaginationHelper.Normalize(page, pageSize);
         var query = _context.Etapas.AsNoTracking().AsQueryable();
 
         if (ativo.HasValue)
