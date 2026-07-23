@@ -40,6 +40,10 @@ public class AuthService : IAuthService
             var ldapResult = TryLdapAuth(username, password);
             if (ldapResult.Success)
             {
+                var existingUser = await _context.Usuarios.FirstOrDefaultAsync(u => u.NmUsuario == username, ct);
+                if (existingUser is not null && !existingUser.FlAtivo)
+                    return new AuthResult(false, null, null, null, "Credenciais inválidas.");
+
                 _logger.LogInformation("Login via LDAP bem-sucedido: '{User}'.", username);
                 var cnUsuario = await UpsertUsuarioLdapAsync(username, ldapResult.DisplayName ?? username, ldapResult.Role ?? "Viewer", ct);
                 return ldapResult with { CnUsuario = cnUsuario };
@@ -66,8 +70,9 @@ public class AuthService : IAuthService
 
             using var connection = new LdapConnection(ldapId);
             connection.SessionOptions.SecureSocketLayer = true;
+            var env = _config["DOTNET_ENVIRONMENT"] ?? _config["ASPNETCORE_ENVIRONMENT"] ?? "Production";
             var skipCertValidation = _config["Ldap:SkipCertificateValidation"]?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false;
-            if (skipCertValidation)
+            if (skipCertValidation && env.Equals("Development", StringComparison.OrdinalIgnoreCase))
                 connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true;
             connection.AuthType = AuthType.Basic;
             connection.Bind(credential);
@@ -111,13 +116,26 @@ public class AuthService : IAuthService
 
         for (int i = 0; i < memberOf.Count; i++)
         {
-            var group = memberOf[i]?.ToString() ?? "";
-            if (group.Contains("STA-Admins", StringComparison.OrdinalIgnoreCase)) return "Admin";
-            if (group.Contains("STA-Operators", StringComparison.OrdinalIgnoreCase)) return "Operator";
-            if (group.Contains("STA-Viewers", StringComparison.OrdinalIgnoreCase)) return "Viewer";
+            var dn = memberOf[i]?.ToString() ?? "";
+            var cn = ExtractCnFromDn(dn);
+            if (cn.Equals("STA-Admins", StringComparison.OrdinalIgnoreCase)) return "Admin";
+            if (cn.Equals("STA-Operators", StringComparison.OrdinalIgnoreCase)) return "Operator";
+            if (cn.Equals("STA-Viewers", StringComparison.OrdinalIgnoreCase)) return "Viewer";
         }
 
         return "Viewer";
+    }
+
+    private static string ExtractCnFromDn(string dn)
+    {
+        if (string.IsNullOrEmpty(dn)) return string.Empty;
+        foreach (var part in dn.Split(','))
+        {
+            var trimmed = part.Trim();
+            if (trimmed.StartsWith("CN=", StringComparison.OrdinalIgnoreCase))
+                return trimmed[3..];
+        }
+        return string.Empty;
     }
 
     private async Task<AuthResult> TryLocalAuthAsync(string username, string password, CancellationToken ct)

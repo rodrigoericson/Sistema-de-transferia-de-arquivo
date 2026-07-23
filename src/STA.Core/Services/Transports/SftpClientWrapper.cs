@@ -78,7 +78,7 @@ public class SftpClientFactory : ISftpClientFactory
         {
             if (!File.Exists(conexao.DsCaminhoChavePrivada))
                 throw new FileNotFoundException(
-                    $"Arquivo de chave privada nao encontrado: '{conexao.DsCaminhoChavePrivada}'. Verifique o caminho ou use autenticacao por senha.");
+                    "Arquivo de chave privada nao encontrado. Verifique a configuracao da conexao ou use autenticacao por senha.");
 
             var keyFile = new PrivateKeyFile(conexao.DsCaminhoChavePrivada);
             client = new SftpClient(conexao.DsHost, conexao.NrPorta, conexao.DsUsuario, keyFile);

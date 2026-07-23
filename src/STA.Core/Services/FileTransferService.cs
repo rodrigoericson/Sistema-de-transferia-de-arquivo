@@ -227,8 +227,10 @@ public class FileTransferService : IFileTransferService
                         file.Length, dtInicioArquivo, ok ? "S" : "E", erro, compressed, false, cancellationToken);
                 }
 
-                if (!fanOutOk) failed++;
+                if (!fanOutOk || !backupOk) failed++;
                 else succeeded++;
+                if (!backupOk)
+                    errors.Add($"{file.Name}: falha no backup — origem preservada.");
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {

@@ -89,6 +89,9 @@ public class DestinosController : ControllerBase
         if (!rotaExists)
             return BadRequest(new ApiResponse<DestinoDto>(false, null, "Rota não encontrada."));
 
+        if (dto.IdProtocolo == "SFTP" && !STA.Core.Services.Transports.SftpPathValidator.TryNormalize(dto.DsDiretorioDestino, out _, out var erroPath))
+            return BadRequest(new ApiResponse<DestinoDto>(false, null, erroPath));
+
         var destino = new RotaDestino
         {
             CnRota = dto.CnRota,
@@ -122,6 +125,9 @@ public class DestinosController : ControllerBase
         var destino = await _context.RotaDestinos.FindAsync([id], ct);
         if (destino is null)
             return NotFound(new ApiResponse<DestinoDto>(false, null, "Destino não encontrado."));
+
+        if (dto.IdProtocolo == "SFTP" && !STA.Core.Services.Transports.SftpPathValidator.TryNormalize(dto.DsDiretorioDestino, out _, out var erroPath))
+            return BadRequest(new ApiResponse<DestinoDto>(false, null, erroPath));
 
         destino.NrOrdem = dto.NrOrdem;
         destino.DsDiretorioDestino = dto.DsDiretorioDestino;

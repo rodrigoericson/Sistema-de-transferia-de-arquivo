@@ -156,7 +156,8 @@ public class Worker : BackgroundService
 
         _estado.IniciarCiclo();
 
-        var totals = new CicloTotals(); // inicializado com default para garantir acesso no finally
+        var totals = new CicloTotals();
+        bool cycleFailed = false;
         try
         {
             totals = await ProcessarChainsAsync(chains, transferService, purgeService, settings, cnLogProcesso, stoppingToken);
@@ -164,9 +165,12 @@ public class Worker : BackgroundService
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Erro durante processamento de chains.");
+            cycleFailed = true;
         }
         finally
         {
+            if (cycleFailed && totals.FilesFailed == 0)
+                totals.ForceFailure();
             try { await FecharLogCicloAsync(logRepository, settings, dtInicio, totals, cnLogProcesso, CancellationToken.None); }
             catch (Exception ex) { _logger.LogWarning(ex, "Falha ao fechar log de ciclo."); }
 
@@ -365,6 +369,11 @@ public class Worker : BackgroundService
             FilesProcessed += result.FilesProcessed;
             FilesSucceeded += result.FilesSucceeded;
             FilesFailed += result.FilesFailed;
+        }
+
+        public void ForceFailure()
+        {
+            if (FilesFailed == 0) FilesFailed = 1;
         }
     }
 
