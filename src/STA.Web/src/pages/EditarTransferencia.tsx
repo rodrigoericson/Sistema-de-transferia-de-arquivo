@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import type { ApiResponse, PaginatedResponse, Rota, Destino } from '../types';
+import type { ApiResponse, PaginatedResponse, Rota, Destino, ConexaoSftp } from '../types';
 import Header from '../components/layout/Header';
 import RenameConfig from '../components/shared/RenameConfig';
 
@@ -31,8 +31,16 @@ export default function EditarTransferencia() {
     dsMascaraRetorno: string;
     dsDiretorioLocalRetorno: string | null;
   }>({ flHabilitarRetorno: false, cnConexaoSftpRetorno: null, dsDiretorioRetorno: null, dsMascaraRetorno: '*', dsDiretorioLocalRetorno: null });
+  const [conexoesSftp, setConexoesSftp] = useState<ConexaoSftp[]>([]);
 
-  useEffect(() => { carregarDados(); }, [etapaId]);
+  useEffect(() => { carregarDados(); carregarConexoesSftp(); }, [etapaId]);
+
+  const carregarConexoesSftp = async () => {
+    try {
+      const { data } = await api.get<ApiResponse<PaginatedResponse<ConexaoSftp>>>('/conexoes-sftp?ativo=true&pageSize=50');
+      if (data.success && data.data) setConexoesSftp(data.data.items);
+    } catch { /* ignore */ }
+  };
 
   const carregarDados = async () => {
     try {
@@ -88,6 +96,11 @@ export default function EditarTransferencia() {
     if (!nome.trim()) { setError('Nome é obrigatório.'); return; }
     if (!origem.trim()) { setError('Origem é obrigatória.'); return; }
     if (destinos.filter(d => d.dir.trim()).length === 0) { setError('Adicione pelo menos um destino.'); return; }
+    if (retornoConfig.flHabilitarRetorno) {
+      if (!retornoConfig.cnConexaoSftpRetorno) { setError('Selecione uma conexão SFTP para o retorno.'); return; }
+      if (!retornoConfig.dsDiretorioRetorno?.trim()) { setError('Informe a pasta remota de retorno.'); return; }
+      if (!retornoConfig.dsDiretorioLocalRetorno?.trim()) { setError('Informe a pasta local de recebimento.'); return; }
+    }
 
     setSaving(true);
     try {
@@ -212,6 +225,60 @@ export default function EditarTransferencia() {
               className="mt-3 px-3 py-1.5 text-sm text-green-400 border border-green-700 hover:bg-green-900/30 rounded">
               + Adicionar outro destino
             </button>
+          </div>
+
+          {/* Retorno SFTP */}
+          <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm text-purple-400 font-mono">↩️ RETORNO SFTP</h2>
+              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <input type="checkbox" checked={retornoConfig.flHabilitarRetorno}
+                  onChange={(e) => setRetornoConfig({ ...retornoConfig, flHabilitarRetorno: e.target.checked })}
+                  className="w-4 h-4" />
+                Habilitar retorno
+              </label>
+            </div>
+            {retornoConfig.flHabilitarRetorno ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Conexão SFTP</label>
+                  <select value={retornoConfig.cnConexaoSftpRetorno ?? ''}
+                    onChange={(e) => setRetornoConfig({ ...retornoConfig, cnConexaoSftpRetorno: e.target.value ? Number(e.target.value) : null })}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm">
+                    <option value="">Selecione...</option>
+                    {conexoesSftp.map(c => (
+                      <option key={c.cnConexaoSftp} value={c.cnConexaoSftp}>{c.nmConexao} ({c.dsHost})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Pasta remota de retorno</label>
+                  <input value={retornoConfig.dsDiretorioRetorno ?? ''}
+                    onChange={(e) => setRetornoConfig({ ...retornoConfig, dsDiretorioRetorno: e.target.value || null })}
+                    placeholder="/retorno"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono focus:outline-none focus:border-purple-500" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Máscara do retorno <span className="text-gray-600">(padrão: *)</span></label>
+                  <input value={retornoConfig.dsMascaraRetorno}
+                    onChange={(e) => setRetornoConfig({ ...retornoConfig, dsMascaraRetorno: e.target.value || '*' })}
+                    placeholder="*"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono focus:outline-none focus:border-purple-500" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Pasta local de recebimento</label>
+                  <input value={retornoConfig.dsDiretorioLocalRetorno ?? ''}
+                    onChange={(e) => setRetornoConfig({ ...retornoConfig, dsDiretorioLocalRetorno: e.target.value || null })}
+                    placeholder="F:\STA\Retornos"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono focus:outline-none focus:border-purple-500" />
+                </div>
+                <p className="text-xs text-gray-600 italic">
+                  Após o envio, o Worker buscará arquivos de retorno neste diretório e os salvará na pasta local. Após salvar, o arquivo de retorno é removido do SFTP.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-600 italic">Habilite para configurar retorno automático de arquivos do SFTP parceiro.</p>
+            )}
           </div>
 
           {/* Opções */}

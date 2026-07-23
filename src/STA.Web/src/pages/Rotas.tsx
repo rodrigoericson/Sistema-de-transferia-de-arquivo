@@ -134,7 +134,7 @@ function RotaFormModal({ initial, onSave, onCancel }: {
   });
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSave(form); };
-  const set = (key: keyof RotaForm, value: string | number | boolean) => setForm({ ...form, [key]: value });
+  const set = (key: keyof RotaForm, value: string | number | boolean | null) => setForm({ ...form, [key]: value });
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
