@@ -4,5 +4,5 @@ namespace STA.Core.Services.Transports;
 
 public interface ITransportFactory
 {
-    IDestinationTransport Criar(RotaDestino destino, ConexaoSftp? conexao);
+    IDestinationTransport Criar(RotaDestino destino, ConexaoSftp? conexao, SftpConnectionPool? pool = null);
 }

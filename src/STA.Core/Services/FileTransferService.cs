@@ -145,25 +145,15 @@ public class FileTransferService : IFileTransferService
                         }
                         var remotePath = Path.Combine(dest.Diretorio, destFileName);
 
-                        if (dest.Destino != null && dest.Destino.IdProtocolo == "SFTP" && dest.Conexao != null)
+                        if (dest.Destino != null && dest.Destino.IdProtocolo == "SFTP")
                         {
-                            ISftpClientWrapper client;
-                            bool ownsClient = false;
-                            if (_sftpPool != null)
-                                client = _sftpPool.GetOrCreate(dest.Conexao);
-                            else
-                            {
-                                client = new SftpClientFactory().Criar(dest.Conexao, new DpapiCredencialProtector());
-                                ownsClient = true;
-                            }
+                            var transport = _transportFactory.Criar(dest.Destino, dest.Conexao, _sftpPool);
+                            var sw = Stopwatch.StartNew();
+                            await transport.UploadFileAsync(filePath, remotePath, overwriteExisting, cancellationToken);
+                            sw.Stop();
 
-                            try
+                            if (dest.Conexao != null)
                             {
-                                var transport = new SftpTransport(client, _logger as ILogger<SftpTransport> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SftpTransport>.Instance);
-                                var sw = Stopwatch.StartNew();
-                                await transport.UploadFileAsync(filePath, remotePath, overwriteExisting, cancellationToken);
-                                sw.Stop();
-
                                 try { await _logSftpRepository.InserirAsync(new LogSftp
                                 {
                                     CnConexaoSftp = dest.Conexao.CnConexaoSftp,
@@ -176,11 +166,6 @@ public class FileTransferService : IFileTransferService
                                     DsMensagem = $"{dest.Conexao.DsHost}:{dest.Conexao.NrPorta}{remotePath}",
                                     DtEvento = DateTime.UtcNow
                                 }, cancellationToken); } catch { }
-                            }
-                            finally
-                            {
-                                if (ownsClient)
-                                    client.Dispose();
                             }
                         }
                         else

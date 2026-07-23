@@ -22,7 +22,7 @@ public class TransportFactory : ITransportFactory
         _overwriteDefault = overwriteDefault;
     }
 
-    public IDestinationTransport Criar(RotaDestino destino, ConexaoSftp? conexao)
+    public IDestinationTransport Criar(RotaDestino destino, ConexaoSftp? conexao, SftpConnectionPool? pool = null)
     {
         if (destino.IdProtocolo == "SFTP")
         {
@@ -30,8 +30,20 @@ public class TransportFactory : ITransportFactory
                 throw new InvalidOperationException(
                     $"Destino #{destino.CnRotaDestino} configurado como SFTP mas sem conexao associada.");
 
-            var client = _sftpFactory.Criar(conexao, _protector);
-            return new SftpTransport(client, _loggerFactory.CreateLogger<SftpTransport>());
+            ISftpClientWrapper client = pool != null
+                ? pool.GetOrCreate(conexao)
+                : _sftpFactory.Criar(conexao, _protector);
+
+            try
+            {
+                return new SftpTransport(client, _loggerFactory.CreateLogger<SftpTransport>());
+            }
+            catch
+            {
+                if (pool == null)
+                    client.Dispose();
+                throw;
+            }
         }
 
         return new LocalFileTransport(_overwriteDefault, _loggerFactory.CreateLogger<LocalFileTransport>());
