@@ -2,10 +2,10 @@ using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using STA.Core.Data;
 using STA.Core.Data.Repositories;
+using STA.Core.DependencyInjection;
 using STA.Core.Services;
 using STA.Core.Services.Transports;
 using STA.Core.Settings;
@@ -20,30 +20,16 @@ var connectionString = Environment.GetEnvironmentVariable("STA_DB_CONN")
     ?? throw new InvalidOperationException(
         "Connection string não configurada. Defina 'ConnectionStrings:StaDb' em appsettings.json ou a variável de ambiente 'STA_DB_CONN'.");
 
-builder.Services.AddDbContext<StaDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsql =>
-    {
-        npgsql.CommandTimeout(120);
-        npgsql.EnableRetryOnFailure(
-            maxRetryCount: 3,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorCodesToAdd: null);
-    }));
-
+builder.Services.AddStaDatabase(connectionString);
 builder.Services.Configure<StaSettings>(builder.Configuration.GetSection("StaSettings"));
 
-builder.Services.AddScoped<IParametroRepository, ParametroRepository>();
-builder.Services.AddScoped<ILogRepository, LogRepository>();
-builder.Services.AddScoped<IEtapaRepository, EtapaRepository>();
-builder.Services.AddScoped<ILogArquivoRepository, LogArquivoRepository>();
-builder.Services.AddScoped<ILogSftpRepository, LogSftpRepository>();
+builder.Services.AddStaRepositories();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddSingleton<ICredencialProtector, DpapiCredencialProtector>();
-builder.Services.AddSingleton<ISftpClientFactory, SftpClientFactory>();
+builder.Services.AddStaSftpTransports();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]
