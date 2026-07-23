@@ -43,6 +43,10 @@ var builder = Host.CreateDefaultBuilder(args)
             return new FileCompressor(settings.Arquivo7Zip, logger);
         });
 
+        // Worker support services
+        services.AddScoped<IWorkerPauseService, WorkerPauseService>();
+        services.AddScoped<ITransferRouteProvider, TransferRouteProvider>();
+
         // Estado de execução (compartilhado entre Worker e API)
         services.AddSingleton<EstadoExecucao>();
 

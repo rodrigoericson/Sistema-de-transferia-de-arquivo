@@ -450,17 +450,8 @@ public class Worker : BackgroundService
 
     private async Task<bool> IsWorkerPausedAsync(CancellationToken stoppingToken)
     {
-        try
-        {
-            using var scope = _scopeFactory.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<STA.Core.Data.StaDbContext>();
-            var param = await context.Parametros
-                .FirstOrDefaultAsync(p => p.CnParametroSistema == 4, stoppingToken);
-            return param?.CdParametroSistema == "true";
-        }
-        catch
-        {
-            return false;
-        }
+        using var scope = _scopeFactory.CreateScope();
+        var pauseService = scope.ServiceProvider.GetRequiredService<STA.Core.Services.IWorkerPauseService>();
+        return await pauseService.IsPausedAsync(stoppingToken);
     }
 }
