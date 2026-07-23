@@ -49,6 +49,8 @@ export interface Destino {
   dsDiretorioDestino: string;
   dsDescompactaDestino: string | null;
   dsPadraoRename: string | null;
+  idProtocolo: string;
+  cnConexaoSftp: number | null;
   flAtivo: boolean;
 }
 

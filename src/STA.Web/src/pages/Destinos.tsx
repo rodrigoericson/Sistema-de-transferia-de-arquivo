@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import type { ApiResponse, PaginatedResponse, Destino } from '../types';
+import type { ApiResponse, PaginatedResponse, Destino, ConexaoSftp } from '../types';
 import Header from '../components/layout/Header';
+import SftpBrowserModal from '../components/sftp/SftpBrowserModal';
 
 export default function Destinos() {
   const { rotaId } = useParams<{ rotaId: string }>();
@@ -57,8 +58,8 @@ export default function Destinos() {
           <thead>
             <tr className="text-left text-gray-500 border-b border-gray-800">
               <th className="py-2 px-3">#</th>
+              <th className="py-2 px-3">Protocolo</th>
               <th className="py-2 px-3">Diretório Destino</th>
-              <th className="py-2 px-3">Descompacta</th>
               <th className="py-2 px-3">Rename</th>
               <th className="py-2 px-3">Status</th>
               <th className="py-2 px-3">Ações</th>
@@ -68,8 +69,12 @@ export default function Destinos() {
             {destinos.map((d) => (
               <tr key={d.cnRotaDestino} className="border-b border-gray-800/50 hover:bg-gray-900/50">
                 <td className="py-2 px-3 text-gray-500">{d.nrOrdem}</td>
+                <td className="py-2 px-3">
+                  <span className={`px-2 py-0.5 rounded text-xs ${d.idProtocolo === 'SFTP' ? 'bg-purple-900 text-purple-300' : 'bg-gray-800 text-gray-400'}`}>
+                    {d.idProtocolo}
+                  </span>
+                </td>
                 <td className="py-2 px-3 font-mono text-xs">{d.dsDiretorioDestino}</td>
-                <td className="py-2 px-3 text-xs">{d.dsDescompactaDestino || '-'}</td>
                 <td className="py-2 px-3 text-xs font-mono text-yellow-400">{d.dsPadraoRename || '-'}</td>
                 <td className="py-2 px-3">
                   <span className={`px-2 py-0.5 rounded text-xs ${d.flAtivo ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
@@ -104,6 +109,8 @@ interface DestinoForm {
   dsDiretorioDestino: string;
   dsDescompactaDestino: string;
   dsPadraoRename: string;
+  idProtocolo: string;
+  cnConexaoSftp: number | null;
   flAtivo: boolean;
 }
 
@@ -117,59 +124,117 @@ function DestinoFormModal({ initial, onSave, onCancel }: {
     dsDiretorioDestino: initial?.dsDiretorioDestino ?? '',
     dsDescompactaDestino: initial?.dsDescompactaDestino ?? '',
     dsPadraoRename: initial?.dsPadraoRename ?? '',
+    idProtocolo: initial?.idProtocolo ?? 'LOCAL',
+    cnConexaoSftp: initial?.cnConexaoSftp ?? null,
     flAtivo: initial?.flAtivo ?? true,
   });
 
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSave(form); };
-  const set = (key: keyof DestinoForm, value: string | number | boolean) => setForm({ ...form, [key]: value });
+  const [conexoes, setConexoes] = useState<ConexaoSftp[]>([]);
+  const [browsing, setBrowsing] = useState<ConexaoSftp | null>(null);
+
+  useEffect(() => {
+    if (form.idProtocolo === 'SFTP') {
+      api.get<ApiResponse<PaginatedResponse<ConexaoSftp>>>('/conexoes-sftp?ativo=true&pageSize=50')
+        .then(({ data }) => { if (data.success && data.data) setConexoes(data.data.items); });
+    }
+  }, [form.idProtocolo]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.dsDiretorioDestino.trim()) { alert('Diretório é obrigatório.'); return; }
+    if (form.idProtocolo === 'SFTP' && !form.cnConexaoSftp) { alert('Selecione uma conexão SFTP.'); return; }
+    onSave(form);
+  };
+
+  const set = (key: keyof DestinoForm, value: string | number | boolean | null) => setForm({ ...form, [key]: value });
+
+  const selectedConexao = conexoes.find(c => c.cnConexaoSftp === form.cnConexaoSftp) ?? null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <form onSubmit={handleSubmit} className="bg-gray-900 p-6 rounded-lg border border-gray-700 w-full max-w-md space-y-4">
-        <h2 className="text-lg text-green-400 font-mono">{initial ? 'Editar Destino' : 'Novo Destino'}</h2>
+    <>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <form onSubmit={handleSubmit} className="bg-gray-900 p-6 rounded-lg border border-gray-700 w-full max-w-md space-y-4">
+          <h2 className="text-lg text-green-400 font-mono">{initial ? 'Editar Destino' : 'Novo Destino'}</h2>
 
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Diretório de Destino</label>
-          <input value={form.dsDiretorioDestino} onChange={(e) => set('dsDiretorioDestino', e.target.value)}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm focus:outline-none focus:border-green-500" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Descompactar no destino</label>
-            <select value={form.dsDescompactaDestino} onChange={(e) => set('dsDescompactaDestino', e.target.value)}
+            <label className="block text-xs text-gray-400 mb-1">Protocolo</label>
+            <select value={form.idProtocolo} onChange={(e) => { set('idProtocolo', e.target.value); if (e.target.value === 'LOCAL') set('cnConexaoSftp', null); }}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm">
-              <option value="">Não</option>
-              <option value="SIM">Sim</option>
+              <option value="LOCAL">LOCAL</option>
+              <option value="SFTP">SFTP</option>
             </select>
           </div>
+
+          {form.idProtocolo === 'SFTP' && (
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Conexão SFTP</label>
+              <div className="flex gap-2">
+                <select value={form.cnConexaoSftp ?? ''} onChange={(e) => set('cnConexaoSftp', e.target.value ? Number(e.target.value) : null)}
+                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm">
+                  <option value="">Selecione...</option>
+                  {conexoes.map(c => (
+                    <option key={c.cnConexaoSftp} value={c.cnConexaoSftp}>{c.nmConexao} ({c.dsHost})</option>
+                  ))}
+                </select>
+                {selectedConexao && (
+                  <button type="button" onClick={() => setBrowsing(selectedConexao)}
+                    className="px-3 py-2 text-xs bg-purple-900 text-purple-300 hover:bg-purple-800 rounded">Explorar</button>
+                )}
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Ordem</label>
-            <input type="number" value={form.nrOrdem} onChange={(e) => set('nrOrdem', Number(e.target.value))}
+            <label className="block text-xs text-gray-400 mb-1">{form.idProtocolo === 'SFTP' ? 'Diretório Remoto' : 'Diretório de Destino'}</label>
+            <input value={form.dsDiretorioDestino} onChange={(e) => set('dsDiretorioDestino', e.target.value)}
+              placeholder={form.idProtocolo === 'SFTP' ? '/entrada' : 'D:\\Destino\\Pasta'}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm font-mono focus:outline-none focus:border-green-500" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Descompactar no destino</label>
+              <select value={form.dsDescompactaDestino} onChange={(e) => set('dsDescompactaDestino', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm">
+                <option value="">Não</option>
+                <option value="SIM">Sim</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Ordem</label>
+              <input type="number" value={form.nrOrdem} onChange={(e) => set('nrOrdem', Number(e.target.value))}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm focus:outline-none focus:border-green-500" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Padrão de Rename <span className="text-gray-600">(opcional)</span></label>
+            <input value={form.dsPadraoRename} onChange={(e) => set('dsPadraoRename', e.target.value)}
+              placeholder="Ex: {NAME}_{DATE}{EXT}"
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm focus:outline-none focus:border-green-500" />
+            <p className="text-xs text-gray-600 mt-1">Placeholders: {'{NAME}'} {'{DATE}'} {'{TIME}'} {'{EXT}'}</p>
           </div>
-        </div>
 
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Padrão de Rename <span className="text-gray-600">(opcional)</span></label>
-          <input value={form.dsPadraoRename} onChange={(e) => set('dsPadraoRename', e.target.value)}
-            placeholder="Ex: {NAME}_{DATE}{EXT}"
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-gray-100 text-sm focus:outline-none focus:border-green-500" />
-          <p className="text-xs text-gray-600 mt-1">Placeholders: {'{NAME}'} {'{DATE}'} {'{TIME}'} {'{EXT}'}</p>
-        </div>
+          {initial && (
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={form.flAtivo} onChange={(e) => set('flAtivo', e.target.checked)} id="ativoDest" />
+              <label htmlFor="ativoDest" className="text-sm text-gray-400">Ativo</label>
+            </div>
+          )}
 
-        {initial && (
-          <div className="flex items-center gap-2">
-            <input type="checkbox" checked={form.flAtivo} onChange={(e) => set('flAtivo', e.target.checked)} id="ativoDest" />
-            <label htmlFor="ativoDest" className="text-sm text-gray-400">Ativo</label>
+          <div className="flex gap-3 justify-end pt-2">
+            <button type="button" onClick={onCancel} className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded">Cancelar</button>
+            <button type="submit" className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded">Salvar</button>
           </div>
-        )}
+        </form>
+      </div>
 
-        <div className="flex gap-3 justify-end pt-2">
-          <button type="button" onClick={onCancel} className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded">Cancelar</button>
-          <button type="submit" className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded">Salvar</button>
-        </div>
-      </form>
-    </div>
+      {browsing && (
+        <SftpBrowserModal
+          conexao={browsing}
+          onCancel={() => setBrowsing(null)}
+        />
+      )}
+    </>
   );
 }
