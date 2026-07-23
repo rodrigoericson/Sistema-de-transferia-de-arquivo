@@ -48,6 +48,8 @@ builder.Services.AddSingleton<ISftpClientFactory, SftpClientFactory>();
 // JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("Jwt:Secret não configurado.");
+if (jwtSecret.Length < 32 || jwtSecret.Contains("CHANGE", StringComparison.OrdinalIgnoreCase) || jwtSecret.Contains("placeholder", StringComparison.OrdinalIgnoreCase))
+    throw new InvalidOperationException("Jwt:Secret é inválido ou é placeholder. Configure um secret com no mínimo 32 caracteres.");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "STA.Api";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "STA.Client";
 
@@ -120,7 +122,7 @@ app.UseCors("Default");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("api");
 app.MapHealthChecks("/health");
 
 app.Run();

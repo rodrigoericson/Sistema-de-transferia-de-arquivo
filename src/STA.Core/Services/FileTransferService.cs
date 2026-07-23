@@ -81,6 +81,8 @@ public class FileTransferService : IFileTransferService
 
         foreach (var dest in destinos)
         {
+            if (dest.Destino?.IdProtocolo == "SFTP")
+                continue;
             try { Directory.CreateDirectory(dest.Diretorio); }
             catch (Exception ex) { _logger.LogWarning(ex, "Não foi possível criar diretório de destino: '{Path}'.", dest.Diretorio); }
         }
@@ -124,8 +126,8 @@ public class FileTransferService : IFileTransferService
                 var (filePath, fileName, wasCompressed) = await TryCompressAsync(file, config, sourceDirectory, timeoutCompactacaoMs, cancellationToken);
                 compressed = wasCompressed;
 
-                // 1. Backup (se configurado)
-                CopyToBackup(filePath, fileName, config.DiretorioBackup, overwriteExisting);
+                // 1. Backup (se configurado) — se falhar e backup era esperado, não apaga origem
+                bool backupOk = CopyToBackup(filePath, fileName, config.DiretorioBackup, overwriteExisting);
 
                 // 2. Fan-out: copia para TODOS os destinos, rastreia resultado por destino
                 bool fanOutOk = true;
@@ -136,33 +138,50 @@ public class FileTransferService : IFileTransferService
                     try
                     {
                         var destFileName = AplicarRename(fileName, dest.PadraoRename);
+                        if (destFileName.Contains("..") || destFileName.Contains('/') || destFileName.Contains('\\'))
+                        {
+                            _logger.LogWarning("Rename pattern gerou nome inseguro: '{Name}'. Usando nome original.", destFileName);
+                            destFileName = fileName;
+                        }
                         var remotePath = Path.Combine(dest.Diretorio, destFileName);
 
                         if (dest.Destino != null && dest.Destino.IdProtocolo == "SFTP" && dest.Conexao != null)
                         {
                             ISftpClientWrapper client;
+                            bool ownsClient = false;
                             if (_sftpPool != null)
                                 client = _sftpPool.GetOrCreate(dest.Conexao);
                             else
-                                client = new SftpClientFactory().Criar(dest.Conexao, new DpapiCredencialProtector());
-
-                            var transport = new SftpTransport(client, _logger as ILogger<SftpTransport> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SftpTransport>.Instance);
-                            var sw = Stopwatch.StartNew();
-                            await transport.UploadFileAsync(filePath, remotePath, overwriteExisting, cancellationToken);
-                            sw.Stop();
-
-                            try { await _logSftpRepository.InserirAsync(new LogSftp
                             {
-                                CnConexaoSftp = dest.Conexao.CnConexaoSftp,
-                                CnRotaDestino = dest.Destino.CnRotaDestino,
-                                IdTipo = "UPLOAD",
-                                IdStatus = "S",
-                                NmArquivo = destFileName,
-                                NrTamanhoBytes = file.Length,
-                                NrDuracaoMs = (int)sw.ElapsedMilliseconds,
-                                DsMensagem = $"{dest.Conexao.DsHost}:{dest.Conexao.NrPorta}{remotePath}",
-                                DtEvento = DateTime.UtcNow
-                            }, cancellationToken); } catch { }
+                                client = new SftpClientFactory().Criar(dest.Conexao, new DpapiCredencialProtector());
+                                ownsClient = true;
+                            }
+
+                            try
+                            {
+                                var transport = new SftpTransport(client, _logger as ILogger<SftpTransport> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SftpTransport>.Instance);
+                                var sw = Stopwatch.StartNew();
+                                await transport.UploadFileAsync(filePath, remotePath, overwriteExisting, cancellationToken);
+                                sw.Stop();
+
+                                try { await _logSftpRepository.InserirAsync(new LogSftp
+                                {
+                                    CnConexaoSftp = dest.Conexao.CnConexaoSftp,
+                                    CnRotaDestino = dest.Destino.CnRotaDestino,
+                                    IdTipo = "UPLOAD",
+                                    IdStatus = "S",
+                                    NmArquivo = destFileName,
+                                    NrTamanhoBytes = file.Length,
+                                    NrDuracaoMs = (int)sw.ElapsedMilliseconds,
+                                    DsMensagem = $"{dest.Conexao.DsHost}:{dest.Conexao.NrPorta}{remotePath}",
+                                    DtEvento = DateTime.UtcNow
+                                }, cancellationToken); } catch { }
+                            }
+                            finally
+                            {
+                                if (ownsClient)
+                                    client.Dispose();
+                            }
                         }
                         else
                         {
@@ -194,8 +213,8 @@ public class FileTransferService : IFileTransferService
                     }
                 }
 
-                // 3. Só apaga origem se fan-out foi 100% bem-sucedido
-                if (fanOutOk)
+                // 3. Só apaga origem se fan-out foi 100% bem-sucedido, backup OK e flag permite
+                if (fanOutOk && backupOk && config.FlExcluirOrigem)
                 {
                     CleanupSource(file.FullName, filePath);
                 }
@@ -257,43 +276,22 @@ public class FileTransferService : IFileTransferService
         File.Copy(sourceFilePath, destPath, overwrite);
     }
 
-    private void CopyToBackup(string sourceFilePath, string fileName, string backupDir, bool overwrite)
+    private bool CopyToBackup(string sourceFilePath, string fileName, string backupDir, bool overwrite)
     {
         if (string.IsNullOrWhiteSpace(backupDir))
-            return;
+            return true;
 
         try
         {
             var backupPath = Path.Combine(backupDir, fileName);
             File.Copy(sourceFilePath, backupPath, overwrite);
+            return true;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Falha ao criar backup de '{File}'.", fileName);
-        }
-    }
-
-    private async Task<bool> TryDecompressAtDestinationAsync(
-        string destinationFilePath,
-        string destinationDirectory,
-        TransferPath config,
-        int timeoutMs,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(config.DescompactaDestino)
-            || !config.DescompactaDestino.Equals("SIM", StringComparison.OrdinalIgnoreCase)
-            || !_compressor.IsFileCompressed(destinationFilePath))
+            _logger.LogWarning(ex, "Falha ao criar backup de '{File}'. Origem não será removida.", fileName);
             return false;
-
-        var ok = await _compressor.DecompressAsync(
-            destinationFilePath, destinationDirectory, timeoutMs, cancellationToken);
-
-        if (ok)
-            File.Delete(destinationFilePath);
-        else
-            _logger.LogWarning("Falha na descompactação de '{File}' no destino.", Path.GetFileName(destinationFilePath));
-
-        return ok;
+        }
     }
 
     private static void CleanupSource(string originalPath, string transferredPath)

@@ -66,14 +66,17 @@ public class AuthService : IAuthService
 
             using var connection = new LdapConnection(ldapId);
             connection.SessionOptions.SecureSocketLayer = true;
-            connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true;
+            var skipCertValidation = _config["Ldap:SkipCertificateValidation"]?.Equals("true", StringComparison.OrdinalIgnoreCase) ?? false;
+            if (skipCertValidation)
+                connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true;
             connection.AuthType = AuthType.Basic;
             connection.Bind(credential);
 
-            // Busca o usuário pra pegar grupos
+            // Busca o usuário pra pegar grupos (username escaped RFC 4515)
+            var escapedUsername = EscapeLdapFilter(username);
             var searchRequest = new SearchRequest(
                 baseDn,
-                $"(sAMAccountName={username})",
+                $"(sAMAccountName={escapedUsername})",
                 SearchScope.Subtree,
                 "memberOf", "displayName");
 
@@ -184,5 +187,15 @@ public class AuthService : IAuthService
 
         await _context.SaveChangesAsync(ct);
         return usuario.CnUsuario;
+    }
+
+    private static string EscapeLdapFilter(string input)
+    {
+        return input
+            .Replace("\\", "\\5c")
+            .Replace("*", "\\2a")
+            .Replace("(", "\\28")
+            .Replace(")", "\\29")
+            .Replace("\0", "\\00");
     }
 }

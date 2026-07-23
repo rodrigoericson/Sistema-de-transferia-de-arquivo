@@ -11,4 +11,5 @@ public record TransferPath(
     long TamanhoInicialArqBytes,
     long TamanhoFinalArqBytes,
     int? CnEtapa = null,
-    int? CnRota = null);
+    int? CnRota = null,
+    bool FlExcluirOrigem = true);

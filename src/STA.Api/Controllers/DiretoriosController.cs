@@ -4,7 +4,7 @@ using STA.Api.Common;
 
 namespace STA.Api.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Operator")]
 [ApiController]
 [Route("api/v1/diretorios")]
 public class DiretoriosController : ControllerBase

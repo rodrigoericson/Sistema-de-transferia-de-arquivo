@@ -7,7 +7,7 @@ using STA.Core.Data;
 
 namespace STA.Api.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Operator")]
 [ApiController]
 [Route("api/v1/logs-sftp")]
 [Produces("application/json")]
