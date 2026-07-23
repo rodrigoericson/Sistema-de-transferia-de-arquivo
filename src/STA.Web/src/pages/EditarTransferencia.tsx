@@ -24,6 +24,13 @@ export default function EditarTransferencia() {
   // IDs para atualização
   const [cnRota, setCnRota] = useState<number | null>(null);
   const [destinoIds, setDestinoIds] = useState<(number | null)[]>([]);
+  const [retornoConfig, setRetornoConfig] = useState<{
+    flHabilitarRetorno: boolean;
+    cnConexaoSftpRetorno: number | null;
+    dsDiretorioRetorno: string | null;
+    dsMascaraRetorno: string;
+    dsDiretorioLocalRetorno: string | null;
+  }>({ flHabilitarRetorno: false, cnConexaoSftpRetorno: null, dsDiretorioRetorno: null, dsMascaraRetorno: '*', dsDiretorioLocalRetorno: null });
 
   useEffect(() => { carregarDados(); }, [etapaId]);
 
@@ -45,6 +52,13 @@ export default function EditarTransferencia() {
         setMascara(rota.dsMascaraArquivo);
         setCompactar(!!rota.dsCompactaOrigemTipo);
         setRetencao(rota.nrDiasExcluir || 365);
+        setRetornoConfig({
+          flHabilitarRetorno: rota.flHabilitarRetorno,
+          cnConexaoSftpRetorno: rota.cnConexaoSftpRetorno,
+          dsDiretorioRetorno: rota.dsDiretorioRetorno,
+          dsMascaraRetorno: rota.dsMascaraRetorno,
+          dsDiretorioLocalRetorno: rota.dsDiretorioLocalRetorno,
+        });
 
         // Carregar destinos
         const destRes = await api.get<ApiResponse<PaginatedResponse<Destino>>>(`/destinos?rotaId=${rota.cnRota}&pageSize=20`);
@@ -94,6 +108,7 @@ export default function EditarTransferencia() {
           dsCompactaOrigemTipo: compactar ? '7Z' : null,
           nrDiasExcluir: retencao,
           flAtivo: true,
+          ...retornoConfig,
         });
       }
 

@@ -106,6 +106,11 @@ interface RotaForm {
   dsCompactaOrigemTipo: string;
   nrDiasExcluir: number;
   flAtivo: boolean;
+  flHabilitarRetorno: boolean;
+  cnConexaoSftpRetorno: number | null;
+  dsDiretorioRetorno: string | null;
+  dsMascaraRetorno: string;
+  dsDiretorioLocalRetorno: string | null;
 }
 
 function RotaFormModal({ initial, onSave, onCancel }: {
@@ -121,6 +126,11 @@ function RotaFormModal({ initial, onSave, onCancel }: {
     dsCompactaOrigemTipo: initial?.dsCompactaOrigemTipo ?? '',
     nrDiasExcluir: initial?.nrDiasExcluir ?? 0,
     flAtivo: initial?.flAtivo ?? true,
+    flHabilitarRetorno: initial?.flHabilitarRetorno ?? false,
+    cnConexaoSftpRetorno: initial?.cnConexaoSftpRetorno ?? null,
+    dsDiretorioRetorno: initial?.dsDiretorioRetorno ?? null,
+    dsMascaraRetorno: initial?.dsMascaraRetorno ?? '*',
+    dsDiretorioLocalRetorno: initial?.dsDiretorioLocalRetorno ?? null,
   });
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSave(form); };

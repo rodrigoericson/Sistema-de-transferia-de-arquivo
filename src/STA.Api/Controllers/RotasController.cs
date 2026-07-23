@@ -111,6 +111,13 @@ public class RotasController : ControllerBase
         if (!etapaExists)
             return BadRequest(new ApiResponse<RotaDto>(false, null, "Etapa não encontrada."));
 
+        if (dto.CnConexaoSftpRetorno.HasValue)
+        {
+            var conexaoExists = await _context.ConexoesSftp.AnyAsync(c => c.CnConexaoSftp == dto.CnConexaoSftpRetorno.Value, ct);
+            if (!conexaoExists)
+                return BadRequest(new ApiResponse<RotaDto>(false, null, "Conexão SFTP de retorno não encontrada."));
+        }
+
         var rota = new RotaTransferencia
         {
             CnEtapa = dto.CnEtapa,
@@ -156,6 +163,13 @@ public class RotasController : ControllerBase
         var rota = await _context.Rotas.FindAsync([id], ct);
         if (rota is null)
             return NotFound(new ApiResponse<RotaDto>(false, null, "Rota não encontrada."));
+
+        if (dto.CnConexaoSftpRetorno.HasValue)
+        {
+            var conexaoExists = await _context.ConexoesSftp.AnyAsync(c => c.CnConexaoSftp == dto.CnConexaoSftpRetorno.Value, ct);
+            if (!conexaoExists)
+                return BadRequest(new ApiResponse<RotaDto>(false, null, "Conexão SFTP de retorno não encontrada."));
+        }
 
         rota.NrOrdem = dto.NrOrdem;
         rota.DsDiretorioOrigem = dto.DsDiretorioOrigem;
